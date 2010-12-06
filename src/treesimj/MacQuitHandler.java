@@ -24,7 +24,7 @@ public class MacQuitHandler extends ApplicationAdapter {
 	}
 
 	public void handleQuit(ApplicationEvent arg0) {
-		TreesimJApp.getApplication().exit();
+		TreesimJApp.getApplication().shutdown();
 	}
 
 }

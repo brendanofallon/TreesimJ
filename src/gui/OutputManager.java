@@ -144,7 +144,7 @@ public class OutputManager implements Serializable {
 		}
 		catch (IOException ioe) {
 			fastaStream = null;
-			JFrame frame = TreesimJApp.getApplication().getMainFrame();
+			JFrame frame = TreesimJApp.getFrame();
 			if (frame==null || !frame.isVisible()) {
 				System.err.println("Could not open fasta file " + fastaFile.getAbsolutePath() + " for writing, reason: " + ioe);
 			}

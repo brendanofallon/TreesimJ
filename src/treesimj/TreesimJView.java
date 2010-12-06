@@ -18,6 +18,8 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -55,11 +57,6 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
-import org.jdesktop.application.Action;
-import org.jdesktop.application.FrameView;
-import org.jdesktop.application.ResourceMap;
-import org.jdesktop.application.SingleFrameApplication;
-
 import population.Individual;
 import population.Population;
 import population.PopulationRunner;
@@ -79,7 +76,7 @@ import dnaModels.DNASequence;
  * a small status label at the bottom. 
  *  
  */
-public class TreesimJView extends FrameView implements DoneListener, ProgressListener {
+public class TreesimJView extends JFrame implements DoneListener, ProgressListener {
 	
 	public static final boolean DEBUG = false; //Turn on a debug mode, currently all this does is allow the simulation to
 											   //be run in the foreground, in which case all exceptions are caught in
@@ -92,9 +89,7 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 	private DemographicModelPanel demoModelPanel;
 	
 	Properties props; //Some basic properties, may be null if we can't find the right file
-	
-	//String iconPath;	
-	
+		
 	//Where we store the settings from the last run
 	private static final String settingsFromLastRun = ".tj_lastrunsettings.xml";
 
@@ -102,8 +97,8 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 	private boolean startFromLoadedPopulation = false;
 
 	
-    public TreesimJView(SingleFrameApplication app, Properties props) {
-        super(app);
+    public TreesimJView(Properties props) {
+        super("TreesimJ");
         this.props = props;
         
         //Set the look and feel to the system version and attempt to avoid metal at all costs
@@ -133,30 +128,15 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
         initComponents();
         fileChooser = new JFileChooser();
         
-        // status bar initialization - message timeout, idle icon and busy animation, etc
-        ResourceMap resourceMap = getResourceMap();
-        int messageTimeout = resourceMap.getInteger("StatusBar.messageTimeout");
-        messageTimer = new Timer(messageTimeout, new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                statusMessageLabel.setText("");
-            }
-        });
-        messageTimer.setRepeats(false);
-        int busyAnimationRate = resourceMap.getInteger("StatusBar.busyAnimationRate");
-        for (int i = 0; i < busyIcons.length; i++) {
-            busyIcons[i] = resourceMap.getIcon("StatusBar.busyIcons[" + i + "]");
-        }
-        busyIconTimer = new Timer(busyAnimationRate, new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                busyIconIndex = (busyIconIndex + 1) % busyIcons.length;
-                statusAnimationLabel.setIcon(busyIcons[busyIconIndex]);
-            }
-        });
-        idleIcon = resourceMap.getIcon("StatusBar.idleIcon");
-        statusAnimationLabel.setIcon(idleIcon);
-        
         initPanels(); //Construct the various elements of the main JTabbedPane
-        
+        pack();
+        setLocationRelativeTo(null);
+        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); //We handling closing ourselves so we can be sure to write the properties and do other shutdown stuff
+        this.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent we) {
+				TreesimJApp.getApplication().shutdown();
+			}
+		}); 
     }
 
     
@@ -169,7 +149,7 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
         String lastRunSettingsPath = props.getProperty("last.run.settings");
         if (lastRunSettingsPath!=null) {
         	String[] ops = {"Reload settings", "Don't load" };
-        	int choice = JOptionPane.showOptionDialog(this.getFrame(), "Reload settings from last run?", "Reload settings", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, ops, ops[0]);
+        	int choice = JOptionPane.showOptionDialog(this, "Reload settings from last run?", "Reload settings", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, ops, ops[0]);
         	
         	if (choice == 0) {
         		try {
@@ -270,7 +250,7 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 			File outputFile = null;
 			if (filename==null || filename.trim().length()==0) {
 				//Popup a file chooser
-				int retVal = fileChooser.showSaveDialog(this.getFrame());
+				int retVal = fileChooser.showSaveDialog(this);
 
 				if (retVal == JFileChooser.APPROVE_OPTION) {
 					outputFile = fileChooser.getSelectedFile();
@@ -291,7 +271,7 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 					outputHandler.addStream(filePS);
 				} catch (FileNotFoundException e) {
 
-					JOptionPane.showMessageDialog(this.getFrame(),
+					JOptionPane.showMessageDialog(this,
 							"Could not open file " + outputFile.getAbsolutePath() + " for writing.",
 							"Output option error",
 							JOptionPane.WARNING_MESSAGE);
@@ -304,7 +284,7 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 			File outputFile = null;
 			if (filename==null || filename.trim().length()==0) {
 				//Popup a file chooser
-				int retVal = fileChooser.showSaveDialog(this.getFrame());
+				int retVal = fileChooser.showSaveDialog(this);
 
 				if (retVal == JFileChooser.APPROVE_OPTION) {
 					outputFile = fileChooser.getSelectedFile();
@@ -325,7 +305,7 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 					
 				} catch (FileNotFoundException e) {
 
-					JOptionPane.showMessageDialog(this.getFrame(),
+					JOptionPane.showMessageDialog(this,
 							"Could not open file " + outputFile.getAbsolutePath() + " for writing.",
 							"Output option error",
 							JOptionPane.WARNING_MESSAGE);
@@ -345,7 +325,7 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 				outputHandler.setTreesStream(filePS);
 			} catch (FileNotFoundException e) {
 
-				JOptionPane.showMessageDialog(this.getFrame(),
+				JOptionPane.showMessageDialog(this,
 						"Could not open trees file " + outputFile.getAbsolutePath() + " for writing.",
 						"Output option error",
 						JOptionPane.WARNING_MESSAGE);
@@ -478,7 +458,7 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 		//This will break if at some point we want to be able to attach DNA to non-dna fitness model
 		if ( (! (fitnessModel instanceof DNAFitness)) && hasDNAStats) {
 			
-			JOptionPane.showMessageDialog(this.getFrame(),
+			JOptionPane.showMessageDialog(this,
 					"Some statistics requiring DNA were selected, but a non-DNA fitness model was chosen. The statistics will be ignored.",
 					"Non-DNA model chosen",
 					JOptionPane.WARNING_MESSAGE);
@@ -504,7 +484,7 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 			//same as from the stored state. We ask the user what they'd like to do here, 
 //			Object[] options = {"Saved options",
 //			"New options"};
-//			int n = JOptionPane.showOptionDialog(this.getFrame(),
+//			int n = JOptionPane.showOptionDialog(ths,
 //					"Would you like to use the same run settings and data collectors as the saved population, or use the currently selected options?",
 //					"Load new options",
 //					JOptionPane.YES_NO_OPTION,
@@ -590,7 +570,7 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 	 * Aborts the current running simulation (if there is one) and attempts to load the a new simulation state file
 	 */
 //	protected void loadPopulationState() {
-//		int val = fileChooser.showOpenDialog(this.getFrame());
+//		int val = fileChooser.showOpenDialog(ths);
 //
 //		if (val == JFileChooser.CANCEL_OPTION || val==JFileChooser.ERROR_OPTION) {
 //			return;
@@ -606,7 +586,7 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 //
 //			if (runner!=null && runner.isRunning()) {
 //				String[] ops = {"Load new run", "Cancel"};
-//				int choice = JOptionPane.showOptionDialog(this.getFrame(), "Abort current simulation run?", "Simulation running", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, ops, ops[0]);
+//				int choice = JOptionPane.showOptionDialog(ths, "Abort current simulation run?", "Simulation running", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, ops, ops[0]);
 //				if (choice == 1) {
 //					return;
 //				}
@@ -667,7 +647,7 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 //			if (!runner.isPaused())
 //				pauseSimulation();
 //
-//			int val = fileChooser.showSaveDialog(this.getFrame());
+//			int val = fileChooser.showSaveDialog(ths);
 //
 //			if (val == JFileChooser.CANCEL_OPTION || val==JFileChooser.ERROR_OPTION) {
 //				return;
@@ -755,7 +735,7 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 				statusLabel.setText("Wrote settings to : " + settingsFile.getName());
 		} catch (Exception ex) {
 			if (warnUser) {
-				JOptionPane.showMessageDialog(this.getFrame(), "There was an error saving the settings file (" + ex.getMessage() + ")", "Error writing file", JOptionPane.WARNING_MESSAGE, null);
+				JOptionPane.showMessageDialog(this, "There was an error saving the settings file (" + ex.getMessage() + ")", "Error writing file", JOptionPane.WARNING_MESSAGE, null);
 				statusLabel.setText("Error writing settings to : " + settingsFile.getName());
 			}
 			ErrorWindow.showErrorWindow(ex, "An error occurred while writing the settings file, and it may not be possible to save settings.");
@@ -766,7 +746,7 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 	 * Import settings from a file that the user selects
 	 */
 	public void importSettings() {
-		int op = fileChooser.showOpenDialog(this.getFrame());
+		int op = fileChooser.showOpenDialog(this);
 		
 		if (op == JFileChooser.APPROVE_OPTION) {
 			File inputFile = fileChooser.getSelectedFile();
@@ -774,38 +754,6 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 		}
 	}
 	
-	/**
-	 * Generates a string that reflects the state of all current settings used by the supplied PopulationRunner - NOT the settings
-	 * that the user has currently selected in the GUI. This is so the settings state of a runnign population can be captured 
-	 * and stored and serialized.  This String should be able to be written directly to a file, and then read in as XML. 
-	 */
-//	public String getXMLSettingsString(PopulationRunner runner) {
-//		StringBuilder settingsStr = new StringBuilder();
-//		//OK, this is a bit klugy, but it gaurantees that the string will always be XML readable....
-//		try {
-//			File tmpFile = new File(".tmpXMLsettingsfile.xml");
-//			Population pop = runner.getPopulation();
-//			FitnessProvider fitnessModel = pop.getInd(0).getFitnessData();
-//			fitnessModel.addXMLAttributes();
-//			DemographicModel demoModel = runner.getDemographicModel();
-//			ArrayList<Statistic> stats = runner.getStatisticsList();
-//			writeSettingsToFile(tmpFile, fitnessModel, demoModel, stats);
-//			
-//			//Now read the file we just wrote in and append it to the settings str..
-//			BufferedReader reader = new BufferedReader(new FileReader(tmpFile));
-//			String line = reader.readLine();
-//			while(line!=null) {
-//				settingsStr.append(line + "\n");
-//				line = reader.readLine();
-//			}
-//		}
-//		catch (IOException ioex) {
-//			System.out.println("Sorry an error was encountered while generating the settings for this simulation run.." + ioex.getMessage());
-//			return null;
-//		}
-//	
-//		return settingsStr.toString();
-//	}
 	
     /**
      * Called upon application shutdown to write additional resources 
@@ -826,8 +774,8 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
     	//We also store the location of the base output directory
     	props.setProperty("output.dir", runSettingsPanel.getBaseDirName());
     	
-    	int frameWidth = this.getFrame().getWidth();
-    	int frameHeight = this.getFrame().getHeight();
+    	int frameWidth = this.getWidth();
+    	int frameHeight = this.getHeight();
     	props.setProperty("frame.width", String.valueOf(frameWidth));
     	props.setProperty("frame.height", String.valueOf(frameHeight));
     	
@@ -873,7 +821,7 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 						
 						}
 						else {
-							JOptionPane.showMessageDialog(this.getFrame(),
+							JOptionPane.showMessageDialog(this,
 									"File " + inputFile.getAbsolutePath() + " does not seem to be a treesimj input file",
 									"File error",
 									JOptionPane.WARNING_MESSAGE);
@@ -903,14 +851,14 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 				
 			}
 			catch (FileNotFoundException fnf) {
-				JOptionPane.showMessageDialog(this.getFrame(),
+				JOptionPane.showMessageDialog(this,
 						"Could not open file " + inputFile.getAbsolutePath() + " for reading",
 						"File error",
 						JOptionPane.WARNING_MESSAGE);
 				return;
 			}
 			catch (XMLStreamException xmlx) {
-				JOptionPane.showMessageDialog(this.getFrame(),
+				JOptionPane.showMessageDialog(this,
 						"Error opening file " + inputFile.getAbsolutePath() + " for reading.",
 						"Output option error",
 						JOptionPane.WARNING_MESSAGE);
@@ -940,7 +888,7 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 		}
 		
 		
-		int val = fileChooser.showSaveDialog(this.getFrame());
+		int val = fileChooser.showSaveDialog(this);
 		
 		if (val == JFileChooser.CANCEL_OPTION || val==JFileChooser.ERROR_OPTION) {
 			return;
@@ -980,17 +928,7 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 		pauseButton.setEnabled(false);
 		stopButton.setEnabled(false);
 	}
-    
 
-	@Action
-    public void showAboutBox() {
-        if (aboutBox == null) {
-            JFrame mainFrame = TreesimJApp.getApplication().getMainFrame();
-            aboutBox = new TreesimJAboutBox(mainFrame);
-            aboutBox.setLocationRelativeTo(mainFrame);
-        }
-        TreesimJApp.getApplication().show(aboutBox);
-    }
 
 	/**
 	 * Returns an icon from the given URL, with a bit of exception handling. 
@@ -1038,7 +976,6 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
 
         toolbar.setName("jToolBar1"); // NOI18N
         
-        org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(treesimj.TreesimJApp.class).getContext().getResourceMap(TreesimJView.class);
         runButton.setText("Run simulation"); // NOI18N
         runButton.setHorizontalTextPosition(0);
         runButton.setName("jButton1"); // NOI18N
@@ -1149,24 +1086,20 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
         
         menuBar.setName("menuBar"); // NOI18N
 
-        fileMenu.setText(resourceMap.getString("fileMenu.text")); // NOI18N
+        fileMenu.setText("File"); // NOI18N
         fileMenu.setName("fileMenu"); // NOI18N
 
-        javax.swing.ActionMap actionMap = org.jdesktop.application.Application.getInstance(treesimj.TreesimJApp.class).getContext().getActionMap(TreesimJView.class, this);
-
+       
         exitMenuItem.setName("exitMenuItem"); // NOI18N
         fileMenu.add(exitMenuItem);
 
         
         menuBar.add(fileMenu);
 
-        helpMenu.setText(resourceMap.getString("helpMenu.text")); // NOI18N
+        helpMenu.setText("Help"); // NOI18N
         helpMenu.setName("helpMenu"); // NOI18N
 
-        aboutMenuItem.setAction(actionMap.get("showAboutBox")); // NOI18N
-        aboutMenuItem.setName("aboutMenuItem"); // NOI18N
-        helpMenu.add(aboutMenuItem);
-
+      
         menuBar.add(helpMenu);
 
         statusPanel.setName("statusPanel"); // NOI18N
@@ -1190,8 +1123,8 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
         
         mainPanel.add(statusPanel, BorderLayout.SOUTH);
         
-        setComponent(mainPanel);
-        setMenuBar(menuBar);
+        this.getContentPane().add(mainPanel);
+        this.setJMenuBar(menuBar);
         
         //Creates a mac applicationAdapter that listens for application exit events
         boolean isMacOS = System.getProperty("mrj.version") != null;
@@ -1211,7 +1144,7 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
         	quitButton = new JMenuItem("Quit");
         	quitButton.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					TreesimJApp.getApplication().exit();
+					TreesimJApp.getApplication().shutdown();
 				}
         	});
         	
@@ -1239,13 +1172,6 @@ public class TreesimJView extends FrameView implements DoneListener, ProgressLis
     private javax.swing.JLabel statusAnimationLabel;
     private javax.swing.JLabel statusMessageLabel;
     private javax.swing.JPanel statusPanel;
-    // End of variables declaration//GEN-END:variables
-
-    private final Timer messageTimer;
-    private final Timer busyIconTimer;
-    private final Icon idleIcon;
-    private final Icon[] busyIcons = new Icon[15];
-    private int busyIconIndex = 0;
 
     private JDialog aboutBox;
 

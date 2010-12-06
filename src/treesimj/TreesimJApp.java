@@ -10,16 +10,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.jdesktop.application.Application;
-import org.jdesktop.application.SingleFrameApplication;
-
 /**
  * The main class of the application, containing the entry point ( the main method ). This class may not exist much longer since
  * it requires the confusing-and-not-really-used JSR 296 (org.jdesktop ..) application model. May be simpler to just nix this
  * whole thing and do it from scratch. We don't really use any of its features, and instead just get stymied when we can't do
  * what we want to. 
  */
-public class TreesimJApp extends SingleFrameApplication {
+public class TreesimJApp {
 
 	static boolean runInputFile;
 	static String inputFilename;
@@ -27,25 +24,27 @@ public class TreesimJApp extends SingleFrameApplication {
 	static Properties props;
 	static boolean hasProperties;
 	
+	static TreesimJApp tjApp = null;
 	static TreesimJView tjView;
 	
 	//We store a few properties, such as the frame size, in the following file
 	static final String defaultPropertiesFilename = ".tj_properties.props";
 	
-	public static final String version="0.7";
+	public static final String version="0.8";
 	
     /**
-     * At startup, see if we should run the input file, or display the main window. Either way we create a TreesimJView
+     * At startup, see if we should run the input file or display the main window. Either way we create a TreesimJView
      * object, which is required for parsing the settings files (this is not generally a great idea - settings file parsing
      * should be separate, somehow) and running the simulation (ditto). If an apparently legit input file was supplied as 
      * an argument use the TreesimJView to parse the settings and then run, but don't show the window. If no argument was supplied,
      * just show the window. 
      * 
      */
-    @Override protected void startup() {
+    protected void startup() {
+    	tjApp = this;
     	
     	try {
-    		tjView = new TreesimJView(this, props);
+    		tjView = new TreesimJView(props);
     	}
     	catch (NoClassDefFoundError importError) {
     		System.out.println("There was an error while attempting to load the required libraries for TreesimJ and the main window could not be constructed. Please make sure you have an up-to-date version of Java installed.");
@@ -63,7 +62,7 @@ public class TreesimJApp extends SingleFrameApplication {
     		tjView.beginSimulationFromGUI(false);
     	}
     	else {
-    		show(tjView); 
+    		tjView.setVisible(true); 
     		
     		//Try to remember what the previous frame size was.... 
 			int frameWidth = 650;
@@ -83,7 +82,7 @@ public class TreesimJApp extends SingleFrameApplication {
     				//We also don't care about this
     			}
     		}
-    		tjView.getFrame().setSize(frameWidth, frameHeight);
+    		tjView.setSize(frameWidth, frameHeight);
     		tjView.askAboutLastRunSettings(); //Ask the user if they want to import settings from the previous run
     	}
         
@@ -94,25 +93,25 @@ public class TreesimJApp extends SingleFrameApplication {
      */
     public void shutdown() {	
     	tjView.writeProperties(); //write properties before shutting down
-    	super.shutdown();
+    	tjView.setVisible(false);
+    	tjView.dispose();
+    	System.exit(0);
     }
 
-    /**
-     * This method is to initialize the specified window by injecting resources.
-     * Windows shown in our application come fully initialized from the GUI
-     * builder, so this additional configuration is not needed.
-     */
-    @Override protected void configureWindow(java.awt.Window root) {
-    }
 
     /**
      * A convenient static getter for the application instance.
      * @return the instance of TreesimJApp
      */
     public static TreesimJApp getApplication() {
-        return Application.getInstance(TreesimJApp.class);
+        return tjApp;
     }
 
+    
+    public static TreesimJView getFrame() {
+    	return tjView;
+    }
+    
     /**
      * Load some properties from a file
      * @param string
@@ -136,8 +135,18 @@ public class TreesimJApp extends SingleFrameApplication {
     	props.setProperty("props.path", propsFullPath);
     	String propsName = propsFile.getName();
     	props.setProperty("props.filename", propsName);
-	}
-    
+    }
+
+
+    public static void launchApplication() {
+    	javax.swing.SwingUtilities.invokeLater(new Runnable() {
+    		public void run() {
+    			TreesimJApp app = new TreesimJApp();
+    			app.startup();
+    		}
+    	});
+    }	
+
     
     /**
      * Main method launching the application.
@@ -170,8 +179,10 @@ public class TreesimJApp extends SingleFrameApplication {
 		//way.. but it's very debateable if this works. 
 		System.setProperty("sun.awt.exception.handler",DefaultExceptionHandler.class.getName());
 		
-        launch(TreesimJApp.class, args);
+        launchApplication();
     }
+
+
 
 
 }
