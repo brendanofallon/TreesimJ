@@ -3,7 +3,7 @@ package statistics.dna;
 import java.util.Arrays;
 import java.util.List;
 
-import population.Individual;
+import population.Locus;
 
 import statistics.Collectible;
 import statistics.Options;
@@ -73,7 +73,7 @@ public static final String identifier = "Fu & Li's F*";
 	
 	@Override
 	public void collect(Collectible pop) {
-		List<Individual> sample = pop.getSample(sampleSize);
+		List<Locus> sample = pop.getSample(sampleSize);
 		
 		double n = sampleSize;
 		
@@ -95,7 +95,7 @@ public static final String identifier = "Fu & Li's F*";
 		values.add(dStar);
 	}
 	
-	private int countSingletons(List<Individual> sample) {
+	private int countSingletons(List<Locus> sample) {
 		int singletons = 0;
 		for(int i=0; i<sample.get(0).getPrimaryDNA().length(); i++) {
 			if (isSingleton(sample, i))
@@ -110,7 +110,7 @@ public static final String identifier = "Fu & Li's F*";
 	 * @param site
 	 * @return
 	 */
-	private boolean isSingleton(List<Individual> sample, int site) {
+	private boolean isSingleton(List<Locus> sample, int site) {
 		for(int i=0; i<counts.length; i++)
 			counts[i] = 0;
 		

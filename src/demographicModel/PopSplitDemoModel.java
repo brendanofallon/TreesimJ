@@ -11,7 +11,7 @@ import dnaModels.DNASequence;
 import fitnessProviders.DNAFitness;
 import gui.OutputManager;
 
-import population.Individual;
+import population.Locus;
 import population.Population;
 import statistics.Statistic;
 import statistics.dna.DNAStatistic;
@@ -149,7 +149,7 @@ public class PopSplitDemoModel extends MultiPopDemoModel {
 				poiGen.setMean(popOneSize*m12);
 				int numMigrants = poiGen.nextInt();
 				if (numMigrants>0) {
-					List<Individual> migrants = pop1.removeIndividuals( numMigrants );
+					List<Locus> migrants = pop1.removeIndividuals( numMigrants );
 					pop2.addIndividuals( migrants );
 				}
 			}
@@ -158,7 +158,7 @@ public class PopSplitDemoModel extends MultiPopDemoModel {
 				poiGen.setMean(popTwoSize*m21);
 				int numMigrants = poiGen.nextInt();
 				if (numMigrants>0) {
-					List<Individual> migrants = pop2.removeIndividuals( numMigrants );
+					List<Locus> migrants = pop2.removeIndividuals( numMigrants );
 					pop1.addIndividuals( migrants );
 				}
 			}

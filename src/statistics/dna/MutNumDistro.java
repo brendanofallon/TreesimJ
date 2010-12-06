@@ -5,7 +5,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import population.Individual;
+import population.Locus;
 
 import dnaModels.DNASequence;
 
@@ -56,9 +56,9 @@ public class MutNumDistro extends HistogramStatistic {
 	public void collect(Collectible pop) {
 		double mean = 0;
 		double c = 0;
-		List<Individual> sample = pop.getSample(sampleSize);
+		List<Locus> sample = pop.getSample(sampleSize);
 		if (sample.get(0).getFitnessData() instanceof TwoStateFitness) {
-			for(Individual ind : sample) {
+			for(Locus ind : sample) {
 				int num = ((TwoStateFitness)(ind.getFitnessData())).getMuts();
 				mean+=num;
 				c++;
@@ -70,7 +70,7 @@ public class MutNumDistro extends HistogramStatistic {
 		
 		}
 		if (sample.get(0).getFitnessData() instanceof IntegerFitness) {
-			for(Individual ind : sample) {
+			for(Locus ind : sample) {
 				int num = ((IntegerFitness)(ind.getFitnessData())).getMuts();
 				mean+=num;
 				c++;

@@ -16,7 +16,7 @@ import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
-import population.Individual;
+import population.Locus;
 import population.Population;
 
 import statistics.Collectible;
@@ -339,10 +339,10 @@ public class OutputManager implements Serializable {
 	 */
 	protected String getFastaFromTreeTips(DiscreteGenTree tree) {
 			StringBuilder str = new StringBuilder();
-			List<Individual> tips = tree.getTips();
+			List<Locus> tips = tree.getTips();
 			Collections.sort(tips, new PopNumSorter());
 			
-			for(Individual ind : tips) {
+			for(Locus ind : tips) {
 				//output directly to .ima
 //				String label = constructLabel(ind);
 //				if (label.length()>9)
@@ -433,7 +433,7 @@ public class OutputManager implements Serializable {
 	 * @param ind
 	 * @return
 	 */
-	private String constructLabel(Individual ind) {
+	private String constructLabel(Locus ind) {
 		if (ind.getDepth()<0)
 			return ind.getReadableID();
 		else {
@@ -487,9 +487,9 @@ public class OutputManager implements Serializable {
 	 * @author brendan
 	 *
 	 */
-	public class PopNumSorter implements Comparator<Individual> {
+	public class PopNumSorter implements Comparator<Locus> {
 
-		public int compare(Individual ind1, Individual ind2) {
+		public int compare(Locus ind1, Locus ind2) {
 			return (ind1.getOriginPop() - ind2.getOriginPop());	
 		}
 		

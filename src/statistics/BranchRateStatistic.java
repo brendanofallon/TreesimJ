@@ -6,7 +6,7 @@ import java.util.Stack;
 
 import javax.swing.JFrame;
 
-import population.Individual;
+import population.Locus;
 
 import dnaModels.DNASequence;
 
@@ -120,10 +120,10 @@ public class BranchRateStatistic extends TreeStatistic {
 		}
 	}
 	
-	private void traverseAddRates(Individual root) {
+	private void traverseAddRates(Locus root) {
 		//Must do an iterative tree traversal to avoid a bagillion recursive calls...
-		Individual current = root;
-		Individual p = root;
+		Locus current = root;
+		Locus p = root;
 		
 		int maxDepth = 0;
 		while(p.numOffspring()>0) {
@@ -131,7 +131,7 @@ public class BranchRateStatistic extends TreeStatistic {
 			maxDepth++;
 		}
 		
-		Stack<Individual> stack = new Stack<Individual>();
+		Stack<Locus> stack = new Stack<Locus>();
 
 		root.setDepth(maxDepth);
 		stack.add(root);
@@ -141,8 +141,8 @@ public class BranchRateStatistic extends TreeStatistic {
 			current = stack.pop();
 			addRateToHistogram(current);
 			
-			ArrayList<Individual> kids = current.getOffspring();
-			for(Individual kid : kids) {
+			ArrayList<Locus> kids = current.getOffspring();
+			for(Locus kid : kids) {
 				kid.setDepth(current.getDepth()-1);
 			}
 			stack.addAll(kids);
@@ -163,7 +163,7 @@ public class BranchRateStatistic extends TreeStatistic {
 	 * (mean) difference in fitness between them to the appropriate histograms 
 	 * @param node
 	 */
-	private void addRateToHistogram(Individual node) {
+	private void addRateToHistogram(Locus node) {
 		double difSum = 0; //Total number of differences between this node and it's offspring's DNA
 		double fitSum = 0; //Difference in fitness between this node and it's offspring
 		int depth = node.getDepth();
@@ -178,7 +178,7 @@ public class BranchRateStatistic extends TreeStatistic {
 			divisor = endSite - startSite;
 		}
 		
-		for(Individual kid : node.getOffspring()) {
+		for(Locus kid : node.getOffspring()) {
 			difSum += countDifs(node.getPrimaryDNA(), kid.getPrimaryDNA())/divisor;
 			fitSum += node.getFitness() - kid.getFitness();
 		}

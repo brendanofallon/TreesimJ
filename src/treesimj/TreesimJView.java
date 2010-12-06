@@ -57,7 +57,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
-import population.Individual;
+import population.Locus;
 import population.Population;
 import population.PopulationRunner;
 

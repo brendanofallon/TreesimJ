@@ -4,7 +4,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 
-import population.Individual;
+import population.Locus;
 
 import statistics.Collectible;
 import statistics.Histogram;
@@ -54,7 +54,7 @@ public class PairwiseCTime extends HistogramStatistic {
 		return String.valueOf(20);
 	}
 	
-	private int pcTime(Individual one, Individual two) {
+	private int pcTime(Locus one, Locus two) {
 		int t = 0;
 		while(one != null && two != null && one != two) {
 			one = one.getParent();
@@ -72,8 +72,8 @@ public class PairwiseCTime extends HistogramStatistic {
 		}
 		lastVal = 0;
 		for(int i=0; i<pairs; i++) {
-			Individual one = pop.getInd( uniGen.nextIntFromTo(0, pop.size()-1));
-			Individual two = pop.getInd( uniGen.nextIntFromTo(0, pop.size()-1));
+			Locus one = pop.getInd( uniGen.nextIntFromTo(0, pop.size()-1));
+			Locus two = pop.getInd( uniGen.nextIntFromTo(0, pop.size()-1));
 			while (one == two) {
 				two = pop.getInd( uniGen.nextIntFromTo(0, pop.size()-1));
 			}

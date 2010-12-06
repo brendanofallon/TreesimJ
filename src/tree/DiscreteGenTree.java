@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
-import population.Individual;
+import population.Locus;
 
 
 /** 
@@ -22,9 +22,9 @@ import population.Individual;
  */
 public class DiscreteGenTree {
 
-	private Individual root = null;
+	private Locus root = null;
 	
-	public DiscreteGenTree(Individual root) {
+	public DiscreteGenTree(Locus root) {
 		this.root = root;
 	}
 	
@@ -80,7 +80,7 @@ public class DiscreteGenTree {
 		}
 	}
 	
-	public Individual getRoot() {
+	public Locus getRoot() {
 		return root;
 	}
 
@@ -90,7 +90,7 @@ public class DiscreteGenTree {
 	 * @return
 	 */
 	public int getMaxHeight() {
-		ArrayList<Individual> tips = this.getTips();
+		ArrayList<Locus> tips = this.getTips();
 		int maxHeight = 0;
 		int i;
 		for(i=0; i<tips.size(); i++)
@@ -107,13 +107,13 @@ public class DiscreteGenTree {
 	 * @return
 	 */
 	public ArrayList<Double> getNodeTimes() {
-		Stack<Individual> nodes = new Stack<Individual>();
+		Stack<Locus> nodes = new Stack<Locus>();
 		nodes.add(root);
 		double maxHeight = getMaxHeight();
 		ArrayList<Double> times = new ArrayList<Double>();
 
 		while(nodes.size()>0) {
-			Individual ind = nodes.pop();
+			Locus ind = nodes.pop();
 			if (ind.numOffspring()>1)
 				times.add( maxHeight- getDistToRoot(ind) );
 			nodes.addAll( ind.getOffspring());
@@ -247,9 +247,9 @@ public class DiscreteGenTree {
 //		return minDepth;
 //	}
 	
-	public static int getDistToRoot(Individual n) {
+	public static int getDistToRoot(Locus n) {
 		int dist = 0;
-		Individual p = n;
+		Locus p = n;
 		while( p != null) {
 			dist++;
 			p = p.getParent();
@@ -258,9 +258,9 @@ public class DiscreteGenTree {
 		return dist;
 	}
 
-	public static int getDistToParent(Individual n) {
+	public static int getDistToParent(Locus n) {
 		int dist = 1;
-		Individual p = n.getParent();
+		Locus p = n.getParent();
 		while( p.numOffspring()==1) {
 			dist++;
 			p = p.getParent();
@@ -274,15 +274,15 @@ public class DiscreteGenTree {
 	 * @param n node to return the next descendant node of
 	 * @return the next node down in tree
 	 */
-	public static Individual getNextNode(Individual n) {
-		Individual ref = n;
+	public static Locus getNextNode(Locus n) {
+		Locus ref = n;
 		while(ref.numOffspring()==1)
 			ref = n.getOffspring(0);
 		
 		return ref;
 	}
 
-	private static int lineageCountSubtree(Individual n, double tDepth) {
+	private static int lineageCountSubtree(Locus n, double tDepth) {
 		double thisDepth = getDistToRoot(n);
 		double parentDepth = getDistToRoot( n.getParent() );
 		if (thisDepth >= tDepth && parentDepth <= tDepth)
@@ -304,7 +304,7 @@ public class DiscreteGenTree {
 	 * Returns an array list of all the tips of the tree
 	 * @return
 	 */
-	public ArrayList<Individual> getTips() {
+	public ArrayList<Locus> getTips() {
 		return getTips(root);
 	}
 	
@@ -312,13 +312,13 @@ public class DiscreteGenTree {
 	 * Returns an array list of all the tips of the tree descending from Individual n
 	 * @return
 	 */
-	private static ArrayList<Individual> getTips(Individual n) {
-		Stack<Individual> nodes = new Stack<Individual>();
+	private static ArrayList<Locus> getTips(Locus n) {
+		Stack<Locus> nodes = new Stack<Locus>();
 		nodes.add(n);
-		ArrayList<Individual> tips = new ArrayList<Individual>();
+		ArrayList<Locus> tips = new ArrayList<Locus>();
 
 		while(nodes.size()>0) {
-			Individual ind = nodes.pop();
+			Locus ind = nodes.pop();
 			if (ind.numOffspring()==0)
 				tips.add( ind );
 			nodes.addAll( ind.getOffspring());
@@ -332,8 +332,8 @@ public class DiscreteGenTree {
 	 * @param n
 	 * @return
 	 */
-	public static int getNodesToRoot(Individual n) {
-		Individual ref = n;
+	public static int getNodesToRoot(Locus n) {
+		Locus ref = n;
 		int sum  = 0;
 		while(ref.getParent() != null) {
 			if (ref.numOffspring()>1)
@@ -348,12 +348,12 @@ public class DiscreteGenTree {
 	 * @param n
 	 * @return
 	 */
-	public static int getNumTips(Individual n) {
-		Stack<Individual> nodes = new Stack<Individual>();
+	public static int getNumTips(Locus n) {
+		Stack<Locus> nodes = new Stack<Locus>();
 		nodes.push(n);
 		int numTips = 0;
 		while(nodes.size()>0) {
-			Individual ind = nodes.pop();
+			Locus ind = nodes.pop();
 			if (ind.numOffspring()==0)
 				numTips++;
 			nodes.addAll( ind.getOffspring());
@@ -368,7 +368,7 @@ public class DiscreteGenTree {
 	 * @param depth The depth of individual n, used to calculate branch lengths
 	 * @return The newick string representing the subtree
 	 */
-	private static String getNewickSubtree(Individual n, int depth) {
+	private static String getNewickSubtree(Locus n, int depth) {
 		while(n.numOffspring()==1) {
 			n = n.getOffspring(0);
 			depth++;
@@ -400,7 +400,7 @@ public class DiscreteGenTree {
 	
 	//Returns a list of the distances to the root of all the tips that descend 
 	//from this Individual
-	public static ArrayList<Integer> getDescendentDepthList(Individual n) {
+	public static ArrayList<Integer> getDescendentDepthList(Locus n) {
 		ArrayList<Integer> depths = new ArrayList<Integer>();
 		if (n.numOffspring()==0) {
 			depths.add( getDistToRoot(n) );
@@ -419,7 +419,7 @@ public class DiscreteGenTree {
 	 * @param n
 	 * @param padding
 	 */
-	private static void printDescendents(Individual n, int padding) {
+	private static void printDescendents(Locus n, int padding) {
 		int i;
 		for(i=0; i<padding; i++)
 			System.out.print("  ");
@@ -435,7 +435,7 @@ public class DiscreteGenTree {
 	 * @param n
 	 * @return
 	 */
-	private static int numDescendentLeaves(Individual n) {
+	private static int numDescendentLeaves(Locus n) {
 		int count = 0;
 		int i;
 		int k = n.numOffspring();
@@ -454,7 +454,7 @@ public class DiscreteGenTree {
 	 * @param n Individual marking the top of the subtree
 	 * @return
 	 */
-	private static int subTreeSize(Individual n) {
+	private static int subTreeSize(Locus n) {
 		int count = 1;
 		int i;
 		for(i=0; i<n.numOffspring(); i++)

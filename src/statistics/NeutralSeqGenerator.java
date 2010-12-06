@@ -5,7 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import population.Individual;
+import population.Locus;
 import population.Population;
 
 import mutationModels.FakePurifyingMutation;
@@ -53,7 +53,7 @@ public class NeutralSeqGenerator {
 	public void collect(Population pop) {
 		calls++;
 		if (calls%5 == 0) {
-			Individual root = pop.getSampleTree(sampleSize);
+			Locus root = pop.getSampleTree(sampleSize);
 			DiscreteGenTree tree = new DiscreteGenTree(root);
 			alignmentsGenerated++;
 			DNASequence rootSeq = new BitSetDNASequence(rng, length, mutMod);
@@ -96,7 +96,7 @@ public class NeutralSeqGenerator {
 	}
 
 	
-	private void emitSequencesFromTree(Individual root, DNASequence seq, BufferedWriter writer, int distFromRoot) {
+	private void emitSequencesFromTree(Locus root, DNASequence seq, BufferedWriter writer, int distFromRoot) {
 		if (root.numOffspring()==0) {
 			((FakePurifyingMutation)seq.getMutationModel()).setDepth(currentTreeHeight-distFromRoot);
 			seq.mutate();
@@ -114,7 +114,7 @@ public class NeutralSeqGenerator {
 			emitSequencesFromTree(root.getOffspring(0), seq, writer, distFromRoot+1);
 		}
 		else {
-			for(Individual kid : root.getOffspring()) {
+			for(Locus kid : root.getOffspring()) {
 				DNASequence newSeq = (DNASequence)seq.getCopy();
 				((FakePurifyingMutation)newSeq.getMutationModel()).setDepth(currentTreeHeight-distFromRoot);
 				newSeq.mutate();

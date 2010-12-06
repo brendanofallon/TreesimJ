@@ -4,7 +4,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 
-import population.Individual;
+import population.Locus;
 
 import statistics.Collectible;
 import statistics.Options;
@@ -39,7 +39,7 @@ public class MeanFitness extends Statistic {
 	public void collect(Collectible pop) {
 		double mean = 0;
 
-		for(Individual ind : pop.getList() ) {
+		for(Locus ind : pop.getList() ) {
 			mean += ind.getFitness();
 		}
 		values.add( mean /(double)pop.size() );

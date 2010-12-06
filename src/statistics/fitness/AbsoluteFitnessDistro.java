@@ -2,7 +2,7 @@ package statistics.fitness;
 
 import java.util.ArrayList;
 
-import population.Individual;
+import population.Locus;
 import statistics.Collectible;
 import statistics.Histogram;
 import statistics.HistogramStatistic;
@@ -43,7 +43,7 @@ public class AbsoluteFitnessDistro extends HistogramStatistic {
 	}
 
 	public void collect(Collectible pop) {
-		for(Individual ind : pop.getList() ) {
+		for(Locus ind : pop.getList() ) {
 			histo.addValue( ind.getFitness() );
 		}
 	}

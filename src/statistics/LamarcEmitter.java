@@ -5,7 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import population.Individual;
+import population.Locus;
 import dnaModels.DNASequence;
 import tree.DiscreteGenTree;
 
@@ -67,7 +67,7 @@ public class LamarcEmitter extends TreeStatistic {
 			return;
 		
 		if (calls % callSkip ==0 && filesWritten < filesToWrite) {
-			ArrayList<Individual> tips = tree.getTips();
+			ArrayList<Locus> tips = tree.getTips();
 			
 			if (tips.get(0).getPrimaryDNA() ==null)
 				return;
@@ -100,7 +100,7 @@ public class LamarcEmitter extends TreeStatistic {
 		return "Saves lamarc files of genetic data, using fileStem : " + fileStem + " files saved : " + filesWritten;
 	}
 	
-	private void writeLamarcInputFile(BufferedWriter writer, ArrayList<Individual> inds, String filename) throws IOException {
+	private void writeLamarcInputFile(BufferedWriter writer, ArrayList<Locus> inds, String filename) throws IOException {
 		String head = "<lamarc version=\"2.1.5\">  \n <!-- " + comment + " --> \n <chains> \n  <replicates>1</replicates> \n  <bayesian-analysis>Yes</bayesian-analysis> \n <heating> \n <adaptive>false</adaptive> \n  <temperatures> 1</temperatures> \n <swap-interval>10</swap-interval> \n </heating> \n  <strategy> \n  <resimulating>0.8</resimulating> \n <tree-size>0.15</tree-size> \n <bayesian>0.05</bayesian>\n<haplotyping>0</haplotyping> \n <trait-arranger>0</trait-arranger> \n </strategy> \n <initial> \n <number>1</number> \n <samples>1000</samples> \n  <discard>1000</discard> \n <interval>20</interval> \n </initial> \n";
 		head += "<final> \n <number>2 " + finalChainNumber + " </number> \n <samples> " + finalChainSamples + " </samples> \n <discard>1000</discard> \n <interval> " + interval + " </interval> \n </final>\n";
 		head += "</chains> \n <format> \n <convert-output-to-eliminate-zero> Yes </convert-output-to-eliminate-zero> \n  <verbosity>normal</verbosity> \n <progress-reports>normal</progress-reports> \n <results-file>outfile.txt</results-file> \n <use-in-summary>false</use-in-summary> \n <in-summary-file>insumfile.xml</in-summary-file> \n <use-out-summary>false</use-out-summary> \n <out-summary-file>outsumfile.xml</out-summary-file> \n  <use-curvefiles>false</use-curvefiles> <curvefile-prefix>curvefile</curvefile-prefix> \n <use-tracefile>true</use-tracefile> \n  <tracefile-prefix>trace</tracefile-prefix> \n <use-newicktreefile>true</use-newicktreefile> \n";
@@ -123,14 +123,14 @@ public class LamarcEmitter extends TreeStatistic {
 		writeLamarcDataFile(writer, inds, filename);
 	}
 	
-	private void writeLamarcDataFile(BufferedWriter writer, ArrayList<Individual> inds, String filename) throws IOException {
+	private void writeLamarcDataFile(BufferedWriter writer, ArrayList<Locus> inds, String filename) throws IOException {
 		int length = inds.get(0).getPrimaryDNA().length();
 			writer.write("\t<block name=\"seg1_simdata\">\n");
         writer.write("\t\t<length> " + length + " </length>\n");
         writer.write("\t</block>\n\t</spacing>\n");
         writer.write("\t<population name=\"pop 1 of simdata\">\n");
         
-        for(Individual ind : inds) {
+        for(Locus ind : inds) {
         	writer.write("\t\t<individual name=\"" + ind.getReadableID() + "\">\n");
         	writer.write("\t\t\t<sample name=\"" + ind.getReadableID() + "_0\">\n");
             writer.write("\t\t\t<datablock type=\"DNA\"> " + ind.getPrimaryDNA().getStringValue() + " </datablock>\n");

@@ -5,7 +5,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import population.Individual;
+import population.Locus;
 
 import dnaModels.DNASequence;
 
@@ -40,7 +40,7 @@ public class SegregatingSites extends DNAStatistic {
 	public void collect(Collectible pop) {
 		//Find inheritable index of DNA. This will produce an error if the index
 		//is not the same across all individuals in the population
-		List<Individual> sample = pop.getSample(sampleSize);
+		List<Locus> sample = pop.getSample(sampleSize);
 		int S = computeSegSitesFromSample(sample);
 		values.add((double)S);
 //		boolean useFitnessData = false;
@@ -96,7 +96,7 @@ public class SegregatingSites extends DNAStatistic {
 	 * @param sample
 	 * @return
 	 */
-	public int computeSegSitesFromSample(List<Individual> sample) {
+	public int computeSegSitesFromSample(List<Locus> sample) {
 		int segSites = 0;
 		DNASequence ref = sample.get(0).getPrimaryDNA();
 		for(int j=0; j<ref.length(); j++) {

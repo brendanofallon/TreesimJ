@@ -26,15 +26,15 @@ import fitnessProviders.QGenFitness;
  */
 public class Population implements Serializable, Collectible {
 
-	ArrayList<Individual> pop; //List of individuals in current population
-	Individual root; //Most basal individual.
+	ArrayList<Locus> pop; //List of individuals in current population
+	Locus root; //Most basal individual.
 	RandomEngine rng;   //Base random number generator
 	Uniform uniGenerator;  //Generator for uniform random variables
 	boolean preserve = false;	//Flag to signal preservation of ancestral genetic data (not always needed, and it saves lots of memory to turn it off)
 	int calls = 0;
 	int currentGen = 0;	//Counts number of calls to newGen
 	
-	ArrayList<Individual> preservedIndividuals; //All 'preserved' individuals, which are not (necessarily) in the current generation but are not to be disposed of (yet)
+	ArrayList<Locus> preservedIndividuals; //All 'preserved' individuals, which are not (necessarily) in the current generation but are not to be disposed of (yet)
 
 	private static int totalPopCount = 0;
 	
@@ -52,7 +52,7 @@ public class Population implements Serializable, Collectible {
 	 */
 	public Population() {
 		
-		preservedIndividuals = new ArrayList<Individual>();
+		preservedIndividuals = new ArrayList<Locus>();
 		myPopNumber = getTotalPopCount();
 		totalPopCount++;
 	}
@@ -65,7 +65,7 @@ public class Population implements Serializable, Collectible {
 	public Population(RandomEngine rnger, int size, boolean preserve, FitnessProvider type) {
 		this.preserve = preserve;
 		uniGenerator = new Uniform(rng);
-		preservedIndividuals = new ArrayList<Individual>();
+		preservedIndividuals = new ArrayList<Locus>();
 		initialize(rnger, size, type, null);
 		myPopNumber = getTotalPopCount();
 		totalPopCount++;
@@ -76,7 +76,7 @@ public class Population implements Serializable, Collectible {
 		inherits.add(item);
 		initialize(rnger, size, type, inherits);
 		this.preserve = preserve;
-		preservedIndividuals = new ArrayList<Individual>();
+		preservedIndividuals = new ArrayList<Locus>();
 		uniGenerator = new Uniform(rng);
 		myPopNumber = getTotalPopCount();
 		totalPopCount++;
@@ -132,7 +132,7 @@ public class Population implements Serializable, Collectible {
 	 */
 	public void changeMasterSequence(DNASequence newMaster) {
 		try {
-			for(Individual ind : pop) {
+			for(Locus ind : pop) {
 				DNAFitness dnaFitness = (DNAFitness) ind.getFitnessData();
 				dnaFitness.setMasterSequence(newMaster);
 			}
@@ -165,7 +165,7 @@ public class Population implements Serializable, Collectible {
 	 * Returns the current gen (with references to ancestral pop)
 	 * @return
 	 */
-	public ArrayList<Individual> getList() {
+	public ArrayList<Locus> getList() {
 		return pop;
 	}
 	
@@ -184,7 +184,7 @@ public class Population implements Serializable, Collectible {
 	public boolean isSane() {
 		int d1 = pop.get(0).distToRoot();
 		boolean is = true;
-		for(Individual ind : pop) {
+		for(Locus ind : pop) {
 			if (ind.distToRoot() != d1) {
 				is = false;
 				break;
@@ -199,12 +199,12 @@ public class Population implements Serializable, Collectible {
 	 * @param sampleSize
 	 * @return
 	 */
-	public ArrayList<Individual> getSample(int sampleSize) {
-		ArrayList<Individual> sample = new ArrayList<Individual>();
+	public ArrayList<Locus> getSample(int sampleSize) {
+		ArrayList<Locus> sample = new ArrayList<Locus>();
 		
 		while(sample.size()<Math.min(pop.size(), sampleSize)) {
 			int which = uniGenerator.nextIntFromTo(0, pop.size()-1);
-			Individual ind = pop.get(which);
+			Locus ind = pop.get(which);
 			if (! sample.contains(ind) ) {
 				sample.add( ind );
 			}
@@ -216,8 +216,8 @@ public class Population implements Serializable, Collectible {
 	/**
 	 * Returns the individual with the given id from the list
 	 */
-	public static Individual findIndByID(List<Individual> inds, long id) {
-		for(Individual ind : inds) {
+	public static Locus findIndByID(List<Locus> inds, long id) {
+		for(Locus ind : inds) {
 			if (ind.getID()==id)
 				return ind;
 		}
@@ -230,14 +230,14 @@ public class Population implements Serializable, Collectible {
 	 * is attached to the sampleKid generation via parent-offspring references
 	 * @param kids
 	 */
-	public static void createSampleParents(List<Individual> actualKids, List<Individual> sampleKids) {
-		List<Individual> parents = new ArrayList<Individual>(); //The actual parents of the kids (in the persistent pop)
-		List<Individual> sampleParents = new ArrayList<Individual>(); //The sampled (copied) parents
+	public static void createSampleParents(List<Locus> actualKids, List<Locus> sampleKids) {
+		List<Locus> parents = new ArrayList<Locus>(); //The actual parents of the kids (in the persistent pop)
+		List<Locus> sampleParents = new ArrayList<Locus>(); //The sampled (copied) parents
 		
-		for(Individual kid : actualKids) {
+		for(Locus kid : actualKids) {
 			if ( findIndByID(parents, kid.getParent().getID())!=null ) {	//The parent of kid is already in the list of parents, all we have to do is update references  
-				Individual sampleParent = findIndByID(sampleParents, kid.getParent().getID());
-				Individual sampleKid = findIndByID(sampleKids, kid.getID());
+				Locus sampleParent = findIndByID(sampleParents, kid.getParent().getID());
+				Locus sampleKid = findIndByID(sampleKids, kid.getID());
 				if (sampleKid==null) 
 					System.err.println("2: Uh-oh, could not find sampleKid with id=" + kid.getID()  );
 				sampleParent.addOffspring( sampleKid );
@@ -245,10 +245,10 @@ public class Population implements Serializable, Collectible {
 			}
 			else {	//The parent of kid is not in the list of sampled parents, so we must create a copy of the parent and add it to sampleParents
 				parents.add( kid.getParent() );
-				Individual sampleParent = kid.getParent().getDataCopy();
+				Locus sampleParent = kid.getParent().getDataCopy();
 				sampleParent.setID( kid.getParent().getID() );
 				
-				Individual sampleKid = findIndByID(sampleKids, kid.getID());
+				Locus sampleKid = findIndByID(sampleKids, kid.getID());
 				if (sampleKid==null) 
 					System.err.println("1: Uh-oh, could not find sampleKid with id=" + kid.getID()  );
 				sampleParent.addOffspring(sampleKid);
@@ -273,13 +273,13 @@ public class Population implements Serializable, Collectible {
 	 * @param sampleSize
 	 * @return The root of the sampled tree 
 	 */
-	public Individual getSampleTree(int sampleSize) {
-		ArrayList<Individual> actualKids = getSample(sampleSize);
-		ArrayList<Individual> sampleKids = new ArrayList<Individual>();
+	public Locus getSampleTree(int sampleSize) {
+		ArrayList<Locus> actualKids = getSample(sampleSize);
+		ArrayList<Locus> sampleKids = new ArrayList<Locus>();
 
 		
-		for(Individual kid : actualKids) {
-			Individual sampleKid = kid.getDataCopy();
+		for(Locus kid : actualKids) {
+			Locus sampleKid = kid.getDataCopy();
 			sampleKid.setID( kid.getID() );
 			sampleKids.add( sampleKid );
 		}
@@ -304,7 +304,7 @@ public class Population implements Serializable, Collectible {
 	 * @param which
 	 * @return
 	 */
-	public Individual getInd(int which) {
+	public Locus getInd(int which) {
 		if (which > pop.size())
 			return null;
 		else
@@ -325,7 +325,7 @@ public class Population implements Serializable, Collectible {
 	 */
 	public void newGen(int newSize) {
 		currentGen++;
-		ArrayList<Individual> newPop = new ArrayList<Individual>();
+		ArrayList<Locus> newPop = new ArrayList<Locus>();
 		
 		if (pop==null) {
 			throw new IllegalStateException("List is null, for pop #" + myPopNumber);
@@ -333,10 +333,10 @@ public class Population implements Serializable, Collectible {
 		
 		while(newPop.size() < newSize) {
 			int who = uniGenerator.nextIntFromTo(0, pop.size()-1);
-			Individual parent = pop.get( who );
+			Locus parent = pop.get( who );
 			
 			if (uniGenerator.nextDouble() < 0.5*parent.getRelFitness() ) {		
-				Individual kid = new Individual(rng);
+				Locus kid = new Locus(rng);
 			
 				kid.setParent( parent ) ;
 				parent.addOffspring(kid);
@@ -361,7 +361,7 @@ public class Population implements Serializable, Collectible {
 		}
 		
 		double newMeanW = 0;
-		for(Individual ind : newPop) {
+		for(Locus ind : newPop) {
 			ind.mutate();
 			newMeanW += ind.getFitness();
 		}
@@ -371,7 +371,7 @@ public class Population implements Serializable, Collectible {
 		
 		
 		//Now set Individual relative fitnesses
-		for(Individual ind : newPop) {
+		for(Locus ind : newPop) {
 			if (qgen) {
 				ind.getFitnessData().setFitness( ind.getFitness()/newMeanW ); //Most fitness models will ignore this,
 				ind.setRelFitness( ind.getFitness() );
@@ -386,7 +386,7 @@ public class Population implements Serializable, Collectible {
 		//zero offspring. This allows the garbage collector to collect these items
 		//At some point it may be more efficient to return these to a pool...
 		int newlyPreserved = 0;
-		for(Individual ind : pop) {
+		for(Locus ind : pop) {
 			if (ind.isPreserve()) {
 				preservedIndividuals.add(ind);
 				newlyPreserved++;
@@ -434,17 +434,17 @@ public class Population implements Serializable, Collectible {
 		//There's a chance that pop contains some individuals which have just now (since the last call to newGen) been
 		//preserved, in this case these individuals will not be in the preservedInds list. We do a quick check here
 		//to make sure see if there are any newly flagged inds that are not in the last
-		for(Individual ind : pop) {
+		for(Locus ind : pop) {
 			if (ind.isPreserve() && !preservedIndividuals.contains(ind))
 				preservedIndividuals.add(ind);
 		}
 		
-		for(Individual ind : preservedIndividuals) {
+		for(Locus ind : preservedIndividuals) {
 			ind.setPreserve(false);
 		}
 		
 		//System.out.println("Releasing " + preservedIndividuals.size() + " preserved inds ");
-		for(Individual ind : preservedIndividuals) {
+		for(Locus ind : preservedIndividuals) {
 			if (ind.numOffspring()==0 && !pop.contains(ind)) { //Remove all inds not in the current generation
 				ind.removeFromPop();
 			}		
@@ -462,12 +462,12 @@ public class Population implements Serializable, Collectible {
 	 * @param inheritables
 	 * @return the root individual of this population. If autoShortenRoot is on (which it is by default), the root will change over time. 
 	 */
-	public Individual initialize(RandomEngine rnger, int N, FitnessProvider type, ArrayList<Inheritable> inheritables) {
+	public Locus initialize(RandomEngine rnger, int N, FitnessProvider type, ArrayList<Inheritable> inheritables) {
 		this.rng = rnger;
 		uniGenerator = new Uniform(rng);
-		pop = new ArrayList<Individual>();
+		pop = new ArrayList<Locus>();
 		
-		root = new Individual(rng); 
+		root = new Locus(rng); 
 		root.setParent(null);
 		root.setFitnessProvider( type );
 		if (inheritables != null)
@@ -476,7 +476,7 @@ public class Population implements Serializable, Collectible {
 		
 		
 		for(int i=0; i<N; i++) { 
-			Individual ind = new Individual(rng);
+			Locus ind = new Locus(rng);
 			ind.copyDataFrom(root);
 			root.addOffspring(ind);
 			ind.setParent(root);
@@ -497,11 +497,11 @@ public class Population implements Serializable, Collectible {
 		this.rng = rnger;
 		uniGenerator = new Uniform(rng);
 		
-		List<Individual> founders = source.getSample(N);
-		pop = new ArrayList<Individual>(founders.size());
+		List<Locus> founders = source.getSample(N);
+		pop = new ArrayList<Locus>(founders.size());
 		
-		for(Individual founder : founders) {
-			Individual ind = new Individual(rng);
+		for(Locus founder : founders) {
+			Locus ind = new Locus(rng);
 			ind.setParent(founder);
 			founder.addOffspring(ind);
 			ind.copyDataFrom(founder);
@@ -524,7 +524,7 @@ public class Population implements Serializable, Collectible {
 	 * (typically in by the globalRoot individual in the MultiPopDemoModel class)
 	 * @return
 	 */
-	public Individual getRoot() {
+	public Locus getRoot() {
 		return root;
 	}
 	
@@ -533,15 +533,15 @@ public class Population implements Serializable, Collectible {
 	 * @param num The number of individuals to remove
 	 * @return A list of Individuals removed
 	 */
-	public List<Individual> removeIndividuals(int num) {
-		List<Individual> sample = new ArrayList<Individual>(num);
+	public List<Locus> removeIndividuals(int num) {
+		List<Locus> sample = new ArrayList<Locus>(num);
 		if (num > pop.size()) {
 			throw new IllegalArgumentException("Cannot sample " + num + " individuals from a population of size : " + pop.size());
 		}
 		
 		while(sample.size()<num) {
 			int which = uniGenerator.nextIntFromTo(0, pop.size()-1);
-			Individual ind = pop.get(which);
+			Locus ind = pop.get(which);
 			if (! sample.contains(ind) ) {
 				sample.add( ind );
 				pop.remove(ind);
@@ -555,8 +555,8 @@ public class Population implements Serializable, Collectible {
 	 * Add the sample of individuals to the current population. 
 	 * @param migrants
 	 */
-	public void addIndividuals(List<Individual> migrants) {
-		for(Individual ind : migrants) {
+	public void addIndividuals(List<Locus> migrants) {
+		for(Locus ind : migrants) {
 			pop.add(ind);
 		}
 	}

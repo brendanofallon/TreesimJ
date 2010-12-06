@@ -8,7 +8,7 @@ import javax.swing.JFrame;
 
 import cern.jet.random.Uniform;
 
-import population.Individual;
+import population.Locus;
 import statistics.Collectible;
 import statistics.NoHistoConfigTool;
 import statistics.Options;
@@ -82,7 +82,7 @@ public class MeanLineageFitness extends Statistic {
 			uniGen = new Uniform(rng);
 		}
 		int which =  uniGen.nextIntFromTo(0, pop.size()-1);
-		Individual ind = pop.getInd(which);
+		Locus ind = pop.getInd(which);
 		int depth = 0;
 		while(ind != null && depth < maxDepth) {
 			//Expand the lists as necessary

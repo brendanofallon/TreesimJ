@@ -5,7 +5,7 @@ import java.util.List;
 
 import cern.jet.random.engine.RandomEngine;
 import fitnessProviders.FitnessProvider;
-import population.Individual;
+import population.Locus;
 import population.Population;
 import statistics.Collectible;
 
@@ -17,7 +17,7 @@ import statistics.Collectible;
 public abstract class MultiPopDemoModel extends DemographicModel {
 
 	//A single individual that is the ancestor of all others. This moves when we call shortenGlobalRoot 
-	Individual globalRoot = null;
+	Locus globalRoot = null;
 	
 	//A list of all populations in the world
 	List<Population> popList = new ArrayList<Population>();
@@ -40,10 +40,10 @@ public abstract class MultiPopDemoModel extends DemographicModel {
 	 * Initialize all populations in this model and attaches the population roots to the globalRoot
 	 */
 	public void initializePopulations(RandomEngine rng, FitnessProvider fitnessModel) {
-		globalRoot = new Individual(rng);
+		globalRoot = new Locus(rng);
 		
 		for(Population pop : getPopList()) {
-			Individual popRoot = pop.initialize(rng, 1, fitnessModel, null);
+			Locus popRoot = pop.initialize(rng, 1, fitnessModel, null);
 			pop.setAutoShortenRoot(false); //Must turn off auto root shortening for individual populations
 			globalRoot.addOffspring(popRoot);
 			popRoot.setParent(globalRoot);

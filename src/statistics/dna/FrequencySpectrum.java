@@ -8,7 +8,7 @@ import java.util.List;
 
 import javax.swing.JFrame;
 
-import population.Individual;
+import population.Locus;
 
 import dnaModels.DNASequence;
 
@@ -44,7 +44,7 @@ public class FrequencySpectrum extends DNAStatistic {
 	public void collect(Collectible pop) {
 		calls++;
 		
-		List<Individual> sample = pop.getSample(sampleSize);
+		List<Locus> sample = pop.getSample(sampleSize);
 
 		int length = sample.get(0).getPrimaryDNA().length();
 		dnaLength = length;
@@ -86,7 +86,7 @@ public class FrequencySpectrum extends DNAStatistic {
 		
 	}
 	
-	private int getMinorAlleleFreq(List<Individual> sample, int site) {
+	private int getMinorAlleleFreq(List<Locus> sample, int site) {
 		int[] counts = getBaseCounts(sample, site);
 		Arrays.sort(counts);
 		
@@ -96,7 +96,7 @@ public class FrequencySpectrum extends DNAStatistic {
 		return counts[2];
 	}
 	
-	private int[] getBaseCounts(List<Individual> sample, int site) {
+	private int[] getBaseCounts(List<Locus> sample, int site) {
 		int[] counts = new int[4];
 		
 		for(int i=0; i<sample.size(); i++) {

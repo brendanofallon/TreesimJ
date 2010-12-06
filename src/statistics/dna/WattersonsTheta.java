@@ -5,7 +5,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import population.Individual;
+import population.Locus;
 
 import statistics.Collectible;
 import statistics.Options;
@@ -42,7 +42,7 @@ public class WattersonsTheta extends DNAStatistic {
 		return true;
 	}
 	
-	public double computeFromSample(List<Individual> sample) {
+	public double computeFromSample(List<Locus> sample) {
 		int S = segSites.computeSegSitesFromSample(sample);
 		double a1 = 0;
 		for(double i=1; i<sample.size(); i++) 
@@ -53,7 +53,7 @@ public class WattersonsTheta extends DNAStatistic {
 	}
 	
 	public void collect(Collectible pop) {
-		List<Individual> sample = pop.getSample(sampleSize);
+		List<Locus> sample = pop.getSample(sampleSize);
 		
 		double tw = computeFromSample(sample);
 		values.add(tw);

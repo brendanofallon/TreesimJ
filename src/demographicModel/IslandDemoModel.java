@@ -10,7 +10,7 @@ import cern.jet.random.engine.RandomEngine;
 import demographicModel.MultiPopCollectible.Strategy;
 import fitnessProviders.FitnessProvider;
 
-import population.Individual;
+import population.Locus;
 import population.Population;
 import statistics.Collectible;
 import xml.TJXMLConstants;
@@ -63,17 +63,17 @@ public class IslandDemoModel extends MultiPopDemoModel {
 	 * @return
 	 */
 	public int countTotalTreeSize() {
-		Stack<Individual> inds = new Stack<Individual>();
+		Stack<Locus> inds = new Stack<Locus>();
 		inds.push(globalRoot);
 		int count = 0;
 		int tips = 0;
 		while(inds.size()>0) {
-			Individual ind = inds.pop();
+			Locus ind = inds.pop();
 			count++;
 			if (ind.isLeaf()) {
 				tips++;
 			}
-			for(Individual kid : ind.getOffspring())
+			for(Locus kid : ind.getOffspring())
 				inds.push(kid);
 		}
 		
@@ -106,7 +106,7 @@ public class IslandDemoModel extends MultiPopDemoModel {
 				if (i!=j) {
 					int numMigrants = poiGen.nextInt();
 					if (numMigrants>0) {
-						List<Individual> migrants = popList.get(i).removeIndividuals( numMigrants );
+						List<Locus> migrants = popList.get(i).removeIndividuals( numMigrants );
 						popList.get(j).addIndividuals( migrants );
 					}
 				}

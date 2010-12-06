@@ -1,6 +1,6 @@
 package statistics;
 
-import population.Individual;
+import population.Locus;
 import tree.DiscreteGenTree;
 
 /**
@@ -30,7 +30,7 @@ public class TreeFitnessEmitter extends TreeStatistic {
 		addCladeSizeDifs(tree.getRoot());
 	}
 
-	protected void addCladeSizeDifs(Individual ind) {
+	protected void addCladeSizeDifs(Locus ind) {
 		if (ind.numOffspring()==0)
 			return;
 		if (ind.numOffspring()==1)
@@ -44,7 +44,7 @@ public class TreeFitnessEmitter extends TreeStatistic {
 				int dist2 = DiscreteGenTree.getDistToParent( DiscreteGenTree.getNextNode( ind.getOffspring(1)));
 				output.println(ind.getFitness() + "\t" + val);
 			}
-			for(Individual kid : ind.getOffspring())
+			for(Locus kid : ind.getOffspring())
 				addCladeSizeDifs(kid);
 		}
 	}

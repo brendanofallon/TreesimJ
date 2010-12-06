@@ -1,6 +1,6 @@
 package statistics;
 
-import population.Individual;
+import population.Locus;
 import fitnessProviders.TwoAlleleFitness;
 
 public class TwoAlleleFrequency extends Statistic {
@@ -21,7 +21,7 @@ public class TwoAlleleFrequency extends Statistic {
 	public void collect(Collectible pop) {
 		double sum = 0;
 		if (pop.getInd(0).getFitnessData() instanceof TwoAlleleFitness) {
-			for(Individual ind : pop.getList()) {
+			for(Locus ind : pop.getList()) {
 				if (((TwoAlleleFitness)ind.getFitnessData()).isMoreFitAllele())
 					sum++;
 			}

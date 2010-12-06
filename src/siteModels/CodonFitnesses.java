@@ -3,7 +3,7 @@ package siteModels;
 import java.util.ArrayList;
 import java.util.List;
 
-import population.Individual;
+import population.Locus;
 
 import mutationModels.MutationModel;
 import cern.jet.random.engine.RandomEngine;
@@ -131,7 +131,7 @@ public class CodonFitnesses extends SiteFitnesses {
 	/**
 	 * A debugging function useful for comparing a given sequence to the master and counting differences
 	 */
-	private static void compareCodonsToMaster(Individual ind) {
+	private static void compareCodonsToMaster(Locus ind) {
 		DNASequence seq = ind.getPrimaryDNA();
 		CodonUtils codUtils = new CodonUtils();
 		DNASequence master = ((DNAFitness)ind.getFitnessData()).getMaster();

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import population.Individual;
+import population.Locus;
 import population.Population;
 
 import tree.DiscreteGenTree;
@@ -32,9 +32,9 @@ public class SerialTreeSampler extends TreeSampler {
 	
 	int collectionOffset = 0;
 	
-	Map<Long, Individual> indsInTree; //Map of all individuals so far added to the tree, indexed by id for speedy lookup
+	Map<Long, Locus> indsInTree; //Map of all individuals so far added to the tree, indexed by id for speedy lookup
 	
-	ArrayList<Individual> tips; //List of individuals sampled thus far
+	ArrayList<Locus> tips; //List of individuals sampled thus far
 	
 	protected boolean collecting = false;
 	int startGen;
@@ -60,7 +60,7 @@ public class SerialTreeSampler extends TreeSampler {
 		if (samplingTimes.length != (sampleSizes.length)) {
 			throw new IllegalArgumentException("There must be the same number of sampling times than sample sizes!");
 		}
-		indsInTree = new HashMap<Long, Individual>();
+		indsInTree = new HashMap<Long, Locus>();
 	}
 	
 	public SerialTreeSampler(int samplingPeriods, int sampleSize, int delay) {
@@ -70,7 +70,7 @@ public class SerialTreeSampler extends TreeSampler {
 		this.collectionFrequency = samplingPeriods*delay*5;
 		System.out.println("SerialTreeSampler collection frequency : " + collectionFrequency);
 		System.out.println("Constructing serial tree sampler with " + samplingPeriods + " sampling periods, each with sample size " + sampleSize + " and time between periods " + delay);
-		indsInTree = new HashMap<Long, Individual>();
+		indsInTree = new HashMap<Long, Locus>();
 	}
 	
 	public void setSampleFrequency(int freq) {
@@ -108,7 +108,7 @@ public class SerialTreeSampler extends TreeSampler {
 				return;
 			}
 			System.out.println("Gen : " + pop.getCurrentGenNumber() + " starting new serial data collection, N=" + pop.size());
-			tips = new ArrayList<Individual>();
+			tips = new ArrayList<Locus>();
 			startGen = pop.getCurrentGenNumber();
 			collecting = true;
 		} 
@@ -118,10 +118,10 @@ public class SerialTreeSampler extends TreeSampler {
 			int elapsedGens = pop.getCurrentGenNumber()-startGen;
 			
 			if ( samplingTimes[nextSampleIndex]==elapsedGens) { 
-				List<Individual> sample = pop.getSample(sampleSizes[nextSampleIndex]);
+				List<Locus> sample = pop.getSample(sampleSizes[nextSampleIndex]);
 				
 				System.out.println("Gen : " + pop.getCurrentGenNumber() + " Flagging " + sample.size() + " new individuals for pres");
-				for(Individual ind : sample) {
+				for(Locus ind : sample) {
 					ind.setPreserve(true);
 					tips.add(ind); 
 				}
@@ -183,7 +183,7 @@ public class SerialTreeSampler extends TreeSampler {
 			System.err.println("Cannot construct tree, there are no tips");
 		}
 		
-		Individual root = addAncestorsToTree(tips.get(0));
+		Locus root = addAncestorsToTree(tips.get(0));
 		
 		for(int i=1; i<tips.size(); i++) {
 			addAncestorsToTree(tips.get(i));
@@ -192,7 +192,7 @@ public class SerialTreeSampler extends TreeSampler {
 		
 		//Bring root 'up' (tipward) until it has more than one offspring
 		while(root.numOffspring()==1) {
-			Individual tail = root;
+			Locus tail = root;
 			root = root.getOffspring(0);
 			root.setParent(null);
 			tail.removeOffspring(root);
@@ -210,9 +210,9 @@ public class SerialTreeSampler extends TreeSampler {
 	 */
 	private void addDepthLabelsToTree() {
 		int height = lastTree.getMaxHeight();
-		ArrayList<Individual> tips = lastTree.getTips();
+		ArrayList<Locus> tips = lastTree.getTips();
 		
-		for(Individual tip : tips) {
+		for(Locus tip : tips) {
 			int dist = tip.distToRoot();
 			tip.setDepth(height-dist);
 		}
@@ -224,7 +224,7 @@ public class SerialTreeSampler extends TreeSampler {
 	 * parent and end there. 
 	 * @param popInd An individual from the persistent population
 	 */
-	private Individual addAncestorsToTree(Individual popInd) {
+	private Locus addAncestorsToTree(Locus popInd) {
 		int count = 0;
 				
 		//There's a chance that popInd is already in the tree, if so, we're done
@@ -232,12 +232,12 @@ public class SerialTreeSampler extends TreeSampler {
 			return null;
 		}
 		
-		Individual sampleInd = popInd.getDataCopy();
+		Locus sampleInd = popInd.getDataCopy();
 		sampleInd.setID(popInd.getID());
 		
-		Individual actualParent = popInd.getParent();
+		Locus actualParent = popInd.getParent();
 
-		Individual sampleParent = indsInTree.get(actualParent.getID());
+		Locus sampleParent = indsInTree.get(actualParent.getID());
 		
 		while (sampleParent==null && actualParent!=null) {
 			

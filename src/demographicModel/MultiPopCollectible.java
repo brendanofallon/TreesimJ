@@ -3,7 +3,7 @@ package demographicModel;
 import java.util.ArrayList;
 import java.util.List;
 
-import population.Individual;
+import population.Locus;
 import population.Population;
 import statistics.Collectible;
 import cern.jet.random.Uniform;
@@ -51,7 +51,7 @@ public class MultiPopCollectible implements Collectible {
 	}
 	
 	
-	public Individual getInd(int which) {
+	public Locus getInd(int which) {
 		int initNum = which;
 		int popNum = 0;
 		
@@ -68,13 +68,13 @@ public class MultiPopCollectible implements Collectible {
 	}
 
 	
-	public List<Individual> getSample(int sampleSize) {
-		List<Individual> sample = new ArrayList<Individual>();
+	public List<Locus> getSample(int sampleSize) {
+		List<Locus> sample = new ArrayList<Locus>();
 		
 		if (samplingStrategy == Strategy.RANDOM) {
 			int maxInds = size();
 			while(sample.size() < sampleSize) {
-				Individual ind = getInd(uniGen.nextIntFromTo(0, maxInds-1));
+				Locus ind = getInd(uniGen.nextIntFromTo(0, maxInds-1));
 				if (!sample.contains(ind))
 					sample.add(ind);
 
@@ -84,7 +84,7 @@ public class MultiPopCollectible implements Collectible {
 		if (samplingStrategy == Strategy.SINGLE) {
 			Population pop = popList.get(singlePop);
 			while(sample.size() < sampleSize) {
-				Individual ind = pop.getInd(uniGen.nextIntFromTo(0, pop.size()-1));
+				Locus ind = pop.getInd(uniGen.nextIntFromTo(0, pop.size()-1));
 				if (!sample.contains(ind))
 					sample.add(ind);
 
@@ -95,9 +95,9 @@ public class MultiPopCollectible implements Collectible {
 		if (samplingStrategy == Strategy.EVEN) {
 			int singleSize = (int)Math.round( (double)sampleSize / (double)popList.size());
 			for(Population pop : popList) {
-				List<Individual> subsample = new ArrayList<Individual>();
+				List<Locus> subsample = new ArrayList<Locus>();
 				while(subsample.size() < singleSize) {
-					Individual ind = pop.getInd(uniGen.nextIntFromTo(0, pop.size()-1));
+					Locus ind = pop.getInd(uniGen.nextIntFromTo(0, pop.size()-1));
 					if (!subsample.contains(ind))
 						subsample.add(ind);
 
@@ -125,8 +125,8 @@ public class MultiPopCollectible implements Collectible {
 	}
 
 	
-	public List<Individual> getList() {
-		List<Individual> everyone = new ArrayList<Individual>(popList.get(0).size());
+	public List<Locus> getList() {
+		List<Locus> everyone = new ArrayList<Locus>(popList.get(0).size());
 		for(Population pop : popList) {
 			everyone.addAll(pop.getList());
 		}
@@ -136,13 +136,13 @@ public class MultiPopCollectible implements Collectible {
 
 	
 	
-	public Individual getSampleTree(int sampleSize) {
-		List<Individual> actualKids = getSample(sampleSize);
-		List<Individual> sampleKids = new ArrayList<Individual>();
+	public Locus getSampleTree(int sampleSize) {
+		List<Locus> actualKids = getSample(sampleSize);
+		List<Locus> sampleKids = new ArrayList<Locus>();
 
 		
-		for(Individual kid : actualKids) {
-			Individual sampleKid = kid.getDataCopy();
+		for(Locus kid : actualKids) {
+			Locus sampleKid = kid.getDataCopy();
 			sampleKid.setID( kid.getID() );
 			sampleKids.add( sampleKid );
 		}

@@ -2,7 +2,7 @@ package statistics.treeShape;
 
 import java.util.ArrayList;
 
-import population.Individual;
+import population.Locus;
 
 import statistics.Options;
 import statistics.TreeStatistic;
@@ -33,7 +33,7 @@ public class CollessIndex extends TreeStatistic {
 		//System.out.println("Colless' index is collecting");
 		if (tree==null)
 			return;
-		Individual root = tree.getRoot();
+		Locus root = tree.getRoot();
 		tmp.clear();
 		addCladeSizeDifs(root);
 		double sum = 0;
@@ -43,7 +43,7 @@ public class CollessIndex extends TreeStatistic {
 		values.add(sum);
 	}
 	
-	protected void addCladeSizeDifs(Individual ind) {
+	protected void addCladeSizeDifs(Locus ind) {
 		if (ind.numOffspring()==0)
 			return;
 		if (ind.numOffspring()==1)
@@ -54,7 +54,7 @@ public class CollessIndex extends TreeStatistic {
 				int tips1 = DiscreteGenTree.getNumTips(ind.getOffspring(1));
 				tmp.add( Math.abs(tips0-tips1) );
 			}
-			for(Individual kid : ind.getOffspring())
+			for(Locus kid : ind.getOffspring())
 				addCladeSizeDifs(kid);
 		}
 	}

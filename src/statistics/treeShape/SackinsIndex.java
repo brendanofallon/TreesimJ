@@ -2,7 +2,7 @@ package statistics.treeShape;
 
 import java.util.ArrayList;
 
-import population.Individual;
+import population.Locus;
 
 import statistics.Options;
 import statistics.TreeStatistic;
@@ -28,11 +28,11 @@ public class SackinsIndex extends TreeStatistic {
 		if (tree==null)
 			return;
 
-		Individual root = tree.getRoot();
-		ArrayList<Individual> tips = tree.getTips();
+		Locus root = tree.getRoot();
+		ArrayList<Locus> tips = tree.getTips();
 
 		double sum = 0;
-		for(Individual tip : tips) {
+		for(Locus tip : tips) {
 			sum += DiscreteGenTree.getNodesToRoot(tip);
 		}
 		values.add(sum/(double)tips.size());

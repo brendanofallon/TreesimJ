@@ -16,14 +16,14 @@ import fitnessProviders.FitnessProvider;
  * @author brendan
  *
  */
-public class Individual implements Serializable {
+public class Locus implements Serializable {
 
 	ArrayList<Inheritable> inheritables; //Additional non fitness-providing inheritable items
 	FitnessProvider fitnessData; //Describes fitness
 	double relativeFitness; 	//Fitness relative to population average in this generation - set & used by Population
 	long id;					//An almost certainly unique id
-	ArrayList<Individual> offspring; //List of all offspring individuals
-	Individual parent;			//Parent individual
+	ArrayList<Locus> offspring; //List of all offspring individuals
+	Locus parent;			//Parent individual
 	RandomEngine rng;
 	String label;	
 	int depth = -1; //Handy for use when traversing big trees
@@ -31,9 +31,9 @@ public class Individual implements Serializable {
 	
 	boolean preserve; //A flag to indicate whether or not this individual can be cleared from the population. Used for serial-tree sampling
 	
-	public Individual(RandomEngine rng) {
+	public Locus(RandomEngine rng) {
 		inheritables = null;
-		offspring = new ArrayList<Individual>(2);
+		offspring = new ArrayList<Locus>(2);
 		parent = null;
 		relativeFitness = 1.0;
 		this.rng = rng;
@@ -96,7 +96,7 @@ public class Individual implements Serializable {
 	 * @param kid
 	 * @return
 	 */
-	public Integer offspringIndex(Individual kid) {
+	public Integer offspringIndex(Locus kid) {
 		Integer index = offspring.indexOf(kid);
 		if (index==-1) {
 			return null;
@@ -182,7 +182,7 @@ public class Individual implements Serializable {
 	}
 	
 	//Removes this individual from the offspring list, if it's in there
-	public boolean removeOffspring(Individual kid) {
+	public boolean removeOffspring(Locus kid) {
 		return offspring.remove(kid);
 	}
 	
@@ -199,7 +199,7 @@ public class Individual implements Serializable {
 			return;
 		
 		int depth = 0;
-		Individual ref = this;
+		Locus ref = this;
 		
 		while(ref.getParent().numOffspring()==1 && !ref.getParent().isPreserve()) {
 			ref = ref.getParent();
@@ -222,7 +222,7 @@ public class Individual implements Serializable {
 	 */
 	public int distToRoot() {
 		int dist = 0;
-		Individual ref = this;
+		Locus ref = this;
 		while(ref.getParent() != null) {
 			dist++;
 			ref = ref.getParent();
@@ -242,19 +242,19 @@ public class Individual implements Serializable {
 		}
 	}
 	
-	public void setParent(Individual par) {
+	public void setParent(Locus par) {
 		parent = par;
 	}
 	
-	public void addOffspring(Individual kid) {
+	public void addOffspring(Locus kid) {
 		offspring.add(kid);
 	}
 	
-	public ArrayList<Individual> getOffspring() {
+	public ArrayList<Locus> getOffspring() {
 		return offspring;
 	}
 	
-	public Individual getOffspring(int which) {
+	public Locus getOffspring(int which) {
 		return offspring.get(which);
 	}
 	
@@ -262,7 +262,7 @@ public class Individual implements Serializable {
 		return offspring.size();
 	}
 	
-	public Individual getParent() {
+	public Locus getParent() {
 		return parent;
 	}
 	
@@ -271,11 +271,11 @@ public class Individual implements Serializable {
 	 * Returns an individual with the same data AND the same parents and offspring as this
 	 * Note that data is cloned, but parents and offspring are just references
 	 */
-	public Individual getCompleteCopy() {
-		Individual ind = new Individual(rng);
+	public Locus getCompleteCopy() {
+		Locus ind = new Locus(rng);
 		ind.copyDataFrom(this);
 		ind.setParent( parent );
-		for(Individual kid : offspring)
+		for(Locus kid : offspring)
 			ind.addOffspring(kid);
 		
 		return ind;
@@ -285,8 +285,8 @@ public class Individual implements Serializable {
 	 * Creates a clone of this individual and copies all data to the new individual using .copyDataFrom(this)
 	 * @return
 	 */
-	public Individual getDataCopy() {
-		Individual ind = new Individual(rng);
+	public Locus getDataCopy() {
+		Locus ind = new Locus(rng);
 		ind.copyDataFrom(this);
 		return ind;
 	}
@@ -295,7 +295,7 @@ public class Individual implements Serializable {
 	 * This just passes references from the parent data to the offspring
 	 * @param parent
 	 */
-	public void inheritFrom(Individual parent) {
+	public void inheritFrom(Locus parent) {
 		fitnessData = parent.getFitnessData();
 		
 		if (inheritables != null) {
@@ -311,7 +311,7 @@ public class Individual implements Serializable {
 	 * Copies data from source individual ind. 
 	 * @param ind
 	 */
-	public void copyDataFrom(Individual ind) {
+	public void copyDataFrom(Locus ind) {
 		if (inheritables != null) {
 			inheritables.clear();
 			for(Inheritable item : inheritables) {

@@ -3,7 +3,7 @@ package statistics;
 import java.io.PrintStream;
 import java.util.ArrayList;
 
-import population.Individual;
+import population.Locus;
 
 import tree.DiscreteGenTree;
 
@@ -65,7 +65,7 @@ public class SimpleTreeSampler extends TreeSampler {
 		lastTree = null;
 
 		
-		Individual root = pop.getSampleTree(sampleSize);
+		Locus root = pop.getSampleTree(sampleSize);
 		DiscreteGenTree tree = new DiscreteGenTree(root);
 		lastTree = tree;
 		ArrayList<Double> nodeTimes = tree.getNodeTimes();

@@ -1,6 +1,6 @@
 package statistics;
 
-import population.Individual;
+import population.Locus;
 
 public class RelativeFitnessDistro extends HistogramStatistic {
 
@@ -26,7 +26,7 @@ public class RelativeFitnessDistro extends HistogramStatistic {
 	
 	public void collect(Collectible pop) {
 		double mean = 0;
-		for(Individual ind : pop.getList() ) {
+		for(Locus ind : pop.getList() ) {
 			histo.addValue(ind.getRelFitness());
 			count++;
 			mean += ind.getRelFitness();

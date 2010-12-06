@@ -2,7 +2,7 @@ package statistics.dna;
 
 import java.util.List;
 
-import population.Individual;
+import population.Locus;
 
 import statistics.Collectible;
 import statistics.Options;
@@ -72,7 +72,7 @@ public class TajimasD extends DNAStatistic {
 		double pi;
 		double S;
 		
-		List<Individual> sample = pop.getSample(sampleSize);
+		List<Locus> sample = pop.getSample(sampleSize);
 		
 		pi = nucD.collectPiFromSample(sample);
 		lastPi = pi;

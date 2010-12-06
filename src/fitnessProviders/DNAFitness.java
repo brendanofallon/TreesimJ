@@ -1,6 +1,6 @@
 package fitnessProviders;
 
-import population.Individual;
+import population.Locus;
 import mutationModels.MutationModel;
 import siteModels.CodonUtils;
 import siteModels.SiteFitnesses;

@@ -5,7 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import population.Individual;
+import population.Locus;
 
 import tree.DiscreteGenTree;
 import dnaModels.DNASequence;
@@ -57,7 +57,7 @@ public class FastaEmitter extends TreeStatistic {
 			return;
 		
 		if (calls % callSkip ==0 && filesWritten < filesToWrite) {
-			ArrayList<Individual> tips = tree.getTips();
+			ArrayList<Locus> tips = tree.getTips();
 			
 			if (tips.get(0).getPrimaryDNA() ==null)
 				return;
@@ -86,10 +86,10 @@ public class FastaEmitter extends TreeStatistic {
 		calls++;
 	}
 
-	private void writeFasta(BufferedWriter writer, ArrayList<Individual> tips,
+	private void writeFasta(BufferedWriter writer, ArrayList<Locus> tips,
 			String filename) {
 		try {
-			for(Individual ind : tips) {
+			for(Locus ind : tips) {
 				writer.write(">" + ind.getReadableID() + "\n");
 				String seq = ind.getPrimaryDNA().getStringValue();
 				writer.write(seq + "\n\n");

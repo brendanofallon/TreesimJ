@@ -3,7 +3,7 @@ package statistics.dna;
 import java.util.ArrayList;
 import java.util.List;
 
-import population.Individual;
+import population.Locus;
 
 import dnaModels.DNASequence;
 
@@ -43,7 +43,7 @@ public class NucDiversity extends DNAStatistic {
 	
 	public void collect(Collectible pop) {
 
-		List<Individual> sample = pop.getSample(sampleSize);
+		List<Locus> sample = pop.getSample(sampleSize);
 		
 		double pi = collectPiFromSample(sample);
 		values.add(pi);
@@ -56,7 +56,7 @@ public class NucDiversity extends DNAStatistic {
 	 * @param sample
 	 * @return
 	 */
-	public double collectPiFromSample(List<Individual> sample) {
+	public double collectPiFromSample(List<Locus> sample) {
 		double pi =0;
 		for(int j=0; j<sample.get(0).getPrimaryDNA().length(); j++) {
 			double siteDiversity;
@@ -67,7 +67,7 @@ public class NucDiversity extends DNAStatistic {
 		return pi;
 	}
 
-	private double getSiteDiversityFromPrimaryDNA(List<Individual> sample, int site) {
+	private double getSiteDiversityFromPrimaryDNA(List<Locus> sample, int site) {
 		for(int i=0; i<freqs.length; i++)
 			freqs[i] = 0;
 		

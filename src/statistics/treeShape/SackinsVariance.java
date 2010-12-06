@@ -2,7 +2,7 @@ package statistics.treeShape;
 
 import java.util.ArrayList;
 
-import population.Individual;
+import population.Locus;
 
 import statistics.Options;
 import statistics.TreeStatistic;
@@ -27,11 +27,11 @@ public class SackinsVariance extends TreeStatistic {
 		if (tree==null)
 			return;
 		
-		ArrayList<Individual> tips = tree.getTips();
+		ArrayList<Locus> tips = tree.getTips();
 
 
 		ArrayList<Double> vals = new ArrayList<Double>();
-		for(Individual tip : tips) {
+		for(Locus tip : tips) {
 			vals.add( (double)DiscreteGenTree.getNodesToRoot(tip));
 		}
 		

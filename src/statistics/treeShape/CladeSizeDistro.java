@@ -1,6 +1,6 @@
 package statistics.treeShape;
 
-import population.Individual;
+import population.Locus;
 import statistics.Options;
 import statistics.TreeStatistic;
 import tree.DiscreteGenTree;
@@ -25,19 +25,19 @@ public class CladeSizeDistro extends TreeStatistic {
 	public void collect(DiscreteGenTree tree) {
 		if (tree==null)
 			return;
-		Individual root = tree.getRoot();
+		Locus root = tree.getRoot();
 		addCladeSizes(root);
 		treesCounted++;
 	}
 
-	protected void addCladeSizes(Individual ind) {
+	protected void addCladeSizes(Locus ind) {
 		if (ind.numOffspring()==0)
 			return;
 		else  {
 			if (ind.numOffspring()>1) {
 				int tips = DiscreteGenTree.getNumTips(ind);
 				values.add((double)tips);
-				for(Individual kid : ind.getOffspring()) {
+				for(Locus kid : ind.getOffspring()) {
 					addCladeSizes(kid);
 				}
 			}

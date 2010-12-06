@@ -3,7 +3,7 @@ package statistics.dna;
 import java.util.Arrays;
 import java.util.List;
 
-import population.Individual;
+import population.Locus;
 
 import statistics.Collectible;
 import statistics.Options;
@@ -70,7 +70,7 @@ public class DStar extends DNAStatistic {
 	
 	@Override
 	public void collect(Collectible pop) {
-		List<Individual> sample = pop.getSample(sampleSize);
+		List<Locus> sample = pop.getSample(sampleSize);
 		
 		double n = sampleSize;
 		
@@ -91,7 +91,7 @@ public class DStar extends DNAStatistic {
 		values.add(dStar);
 	}
 	
-	private int countSingletons(List<Individual> sample) {
+	private int countSingletons(List<Locus> sample) {
 		int singletons = 0;
 		for(int i=0; i<sample.get(0).getPrimaryDNA().length(); i++) {
 			if (isSingleton(sample, i))
@@ -106,7 +106,7 @@ public class DStar extends DNAStatistic {
 	 * @param site
 	 * @return
 	 */
-	private boolean isSingleton(List<Individual> sample, int site) {
+	private boolean isSingleton(List<Locus> sample, int site) {
 		for(int i=0; i<counts.length; i++)
 			counts[i] = 0;
 		
