@@ -43,7 +43,7 @@ public abstract class MultiPopDemoModel extends DemographicModel {
 		globalRoot = new Locus(rng);
 		
 		for(Population pop : getPopList()) {
-			Locus popRoot = pop.initialize(rng, 1, fitnessModel, null);
+			Locus popRoot = pop.initialize(rng, 1, fitnessModel);
 			pop.setAutoShortenRoot(false); //Must turn off auto root shortening for individual populations
 			globalRoot.addOffspring(popRoot);
 			popRoot.setParent(globalRoot);

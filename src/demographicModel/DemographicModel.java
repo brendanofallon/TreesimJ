@@ -50,7 +50,7 @@ public abstract class DemographicModel extends XMLParseable {
 	 */
 	public void initializePopulations(RandomEngine rng, FitnessProvider fitnessModel) {
 		for(Population pop : getPopList()) {
-			pop.initialize(rng, 1, fitnessModel, null);
+			pop.initialize(rng, 1, fitnessModel);
 		}
 	}
 	

@@ -66,18 +66,7 @@ public class Population implements Serializable, Collectible {
 		this.preserve = preserve;
 		uniGenerator = new Uniform(rng);
 		preservedIndividuals = new ArrayList<Locus>();
-		initialize(rnger, size, type, null);
-		myPopNumber = getTotalPopCount();
-		totalPopCount++;
-	}
-	
-	public Population(RandomEngine rnger, int size, boolean preserve, FitnessProvider type, Inheritable item) {
-		ArrayList<Inheritable> inherits = new ArrayList<Inheritable>();
-		inherits.add(item);
-		initialize(rnger, size, type, inherits);
-		this.preserve = preserve;
-		preservedIndividuals = new ArrayList<Locus>();
-		uniGenerator = new Uniform(rng);
+		initialize(rnger, size, type);
 		myPopNumber = getTotalPopCount();
 		totalPopCount++;
 	}
@@ -462,7 +451,7 @@ public class Population implements Serializable, Collectible {
 	 * @param inheritables
 	 * @return the root individual of this population. If autoShortenRoot is on (which it is by default), the root will change over time. 
 	 */
-	public Locus initialize(RandomEngine rnger, int N, FitnessProvider type, ArrayList<Inheritable> inheritables) {
+	public Locus initialize(RandomEngine rnger, int N, FitnessProvider type) {
 		this.rng = rnger;
 		uniGenerator = new Uniform(rng);
 		pop = new ArrayList<Locus>();
@@ -470,10 +459,6 @@ public class Population implements Serializable, Collectible {
 		root = new Locus(rng); 
 		root.setParent(null);
 		root.setFitnessProvider( type );
-		if (inheritables != null)
-			for(Inheritable item : inheritables)
-				root.addInheritable(item);
-		
 		
 		for(int i=0; i<N; i++) { 
 			Locus ind = new Locus(rng);

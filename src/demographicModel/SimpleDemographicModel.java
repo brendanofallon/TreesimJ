@@ -31,7 +31,7 @@ public abstract class SimpleDemographicModel extends DemographicModel {
 	public void initializePopulations(RandomEngine rng, FitnessProvider fitnessModel) {
 		
 		for(Population pop : getPopList()) {
-			pop.initialize(rng, getN(0), fitnessModel, null);
+			pop.initialize(rng, getN(0), fitnessModel);
 		}
 	}
 	

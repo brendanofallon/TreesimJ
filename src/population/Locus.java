@@ -9,16 +9,15 @@ import dnaModels.DNASequence;
 import fitnessProviders.FitnessProvider;
 
 /**
- * A single individual, with references to exactly one parent and zero or more offspring. The root individual always has parent null.
- * Individuals have a FitnessProvider element which they query to determine their fitness, and zero or more additional 
- * inheritable items. 
+ * A single, potentially recombining genetic locus, with references to exactly one parent and zero or more offspring. 
+ * The root individual always has parent null. Loci have a FitnessProvider element which they query to determine their 
+ * fitness.
  * 
  * @author brendan
  *
  */
 public class Locus implements Serializable {
 
-	ArrayList<Inheritable> inheritables; //Additional non fitness-providing inheritable items
 	FitnessProvider fitnessData; //Describes fitness
 	double relativeFitness; 	//Fitness relative to population average in this generation - set & used by Population
 	long id;					//An almost certainly unique id
@@ -32,7 +31,6 @@ public class Locus implements Serializable {
 	boolean preserve; //A flag to indicate whether or not this individual can be cleared from the population. Used for serial-tree sampling
 	
 	public Locus(RandomEngine rng) {
-		inheritables = null;
 		offspring = new ArrayList<Locus>(2);
 		parent = null;
 		relativeFitness = 1.0;
@@ -50,12 +48,7 @@ public class Locus implements Serializable {
 	public int getOriginPop() {
 		return originPop;
 	}
-	
-	public void addInheritable(Inheritable item) {
-		if (inheritables == null) 
-			inheritables = new ArrayList<Inheritable>(2);
-		inheritables.add(item);
-	}
+
 	
 	public void setLabel(String l) {
 		label = l;
@@ -114,14 +107,7 @@ public class Locus implements Serializable {
 		if (fitnessData.getSubstrate() instanceof DNASequence) {
 			return (DNASequence)fitnessData.getSubstrate();
 		}
-		else {
-			if (inheritables != null) {
-				for(Inheritable item : inheritables) {
-					if (item instanceof DNASequence)
-						return (DNASequence)item;
-				}
-			}
-		}
+		
 		return null;
 	}
 	
@@ -169,17 +155,6 @@ public class Locus implements Serializable {
 		return fitnessData.getFitness();
 	}
 	
-	public int getNumInheritables() {
-		if (inheritables == null)
-			return 0;
-		return inheritables.size();
-	}
-	
-	public Inheritable getInheritable(int which) {
-		if (inheritables == null)
-			return null;
-		return inheritables.get(which);
-	}
 	
 	//Removes this individual from the offspring list, if it's in there
 	public boolean removeOffspring(Locus kid) {
@@ -235,11 +210,6 @@ public class Locus implements Serializable {
 	 */
 	public void mutate() {
 		fitnessData.mutate();
-		if (inheritables != null) {
-			for(Inheritable item : inheritables) {
-				item.mutate();
-			}
-		}
 	}
 	
 	public void setParent(Locus par) {
@@ -297,13 +267,6 @@ public class Locus implements Serializable {
 	 */
 	public void inheritFrom(Locus parent) {
 		fitnessData = parent.getFitnessData();
-		
-		if (inheritables != null) {
-			inheritables.clear();
-			for(Inheritable item : inheritables) {
-				inheritables.add(item);
-			}
-		}
 	}
 	
 	
@@ -312,12 +275,6 @@ public class Locus implements Serializable {
 	 * @param ind
 	 */
 	public void copyDataFrom(Locus ind) {
-		if (inheritables != null) {
-			inheritables.clear();
-			for(Inheritable item : inheritables) {
-				inheritables.add(item.getCopy());
-			}
-		}
 		originPop = ind.originPop;
 		fitnessData = ind.getFitnessData().getCopy();
 	}
