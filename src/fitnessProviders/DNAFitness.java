@@ -1,6 +1,7 @@
 package fitnessProviders;
 
 import population.Locus;
+import population.Recombineable;
 import mutationModels.MutationModel;
 import siteModels.CodonUtils;
 import siteModels.SiteFitnesses;
@@ -16,19 +17,18 @@ import dnaModels.DNASequence;
  * @author brendan
  *
  */
-public class DNAFitness extends FitnessProvider {
+public class DNAFitness extends FitnessProvider implements Recombineable {
 
 	//The XML attribute that identifies this model, the associated xml block will read <Fitness.model type="DNA.fitness">....
 	public static final String XML_ATTR = "DNA.fitness";
 	
 
-	DNASequence master; 		//The sequence with the highest possible fitness. We need a reference to this so we know which mutations are deleterious, etc.
-	DNASequence seq;				//The actual DNA sequence of this individual
-	Double currentFitness = 1.0;	//The fitness of this individual. This is updated in the function mutateUpdateFitness
-	RandomEngine rng;				//The random number engine used to generate random numbers 
-	MutationModel mutMod; 			//The mutation model of this individual
-	SiteFitnesses siteModel;		//The model that describes the fitness impact of mutations at different sites
-	
+	protected DNASequence master; 		//The sequence with the highest possible fitness. We need a reference to this so we know which mutations are deleterious, etc.
+	protected DNASequence seq;				//The actual DNA sequence of this individual
+	protected Double currentFitness = 1.0;	//The fitness of this individual. This is updated in the function mutateUpdateFitness
+	protected RandomEngine rng;				//The random number engine used to generate random numbers 
+	protected MutationModel mutMod; 			//The mutation model of this individual
+	protected SiteFitnesses siteModel;		//The model that describes the fitness impact of mutations at different sites
 	
 	/**
 	 * Construct a new DNA fitness model using the supplied arguments. The initial state of the DNA sequence will
@@ -205,6 +205,22 @@ public class DNAFitness extends FitnessProvider {
 	public void setRandomEngine(RandomEngine rng) {
 		this.rng = rng;
 		mutMod.setRandomEngine(rng);
+	}
+
+	@Override
+	public int length() {
+		return seq.length();
+	}
+
+	@Override
+	public Object getRegion(int min, int max) {
+		return seq.getRegion(min, max);
+	}
+
+	@Override
+	public void setRegion(int min, int max, Object region) {
+		seq.setRegion(min, max, region);
+		currentFitness = siteModel.recomputeFitness(seq, master);
 	}
 
 }

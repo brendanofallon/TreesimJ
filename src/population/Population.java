@@ -12,7 +12,6 @@ import java.util.TreeSet;
 import siteModels.CodonUtils;
 import siteModels.CodonUtils.AminoAcid;
 import statistics.Collectible;
-import treesimj.Individual;
 
 import cern.jet.random.Poisson;
 import cern.jet.random.Uniform;
@@ -33,10 +32,10 @@ import fitnessProviders.QGenFitness;
  */
 public class Population implements Serializable, Collectible {
 
-	ArrayList<Locus> pop; //List of individuals in current population
-	Locus root; //Most basal individual.
-	RandomEngine rng;   //Base random number generator
-	Uniform uniGenerator;  //Generator for uniform random variables
+	ArrayList<Locus> pop; 	//List of individuals in current population
+	Locus root; 			//Most basal individual.
+	RandomEngine rng;   	//Base random number generator
+	Uniform uniGenerator;   //Generator for uniform random variables
 	Poisson poissonGenerator; //Generator for poisson random vars
 	boolean preserve = false;	//Flag to signal preservation of ancestral genetic data (not always needed, and it saves lots of memory to turn it off)
 	int calls = 0;
@@ -212,12 +211,11 @@ public class Population implements Serializable, Collectible {
 		
 		Set<Locus> parentSet = new HashSet<Locus>();
 		
-		
 		int nodeTotal = 0;
 		//System.out.println("Finding fc...");
 		while(sample.size()>1) {
-//			if (depth%10==0)
-//				System.out.println("Ancestors at depth " + depth + " : " + sample.size());
+			if (getCurrentGenNumber()%100==0 && depth%10==0)
+				System.out.println("Ancestors at depth " + depth + " : " + sample.size());
 			depth++;
 			nodeTotal += sample.size();
 			List<Locus> parents = new ArrayList<Locus>(pop.size());
@@ -254,14 +252,15 @@ public class Population implements Serializable, Collectible {
 		
 		//System.out.println("..done");
 		
-//		if (getCurrentGenNumber()%10==0)
-//			System.out.println("Current gen: "+ getCurrentGenNumber() + " FC depth : " + depth + " total nodes: " + nodeTotal);
+		if (getCurrentGenNumber()%50==0) {
+			System.out.println("Current gen: "+ getCurrentGenNumber() + " FC depth : " + depth + " total nodes: " + nodeTotal);
+		}
 		return sample.get(0);
 	}
 	
 	
 	/**
-	 * Collect 
+	 * Collects the positions of all breakpoints ancestral to the sample of individuals 
 	 * @param sample
 	 * @return
 	 */
@@ -523,6 +522,44 @@ public class Population implements Serializable, Collectible {
 	}
 	
 	/**
+	 * Performs a few checks for the validity of the tree, including making sure individuals have a parent and
+	 * that the parent has a link back to the offspring, etc 
+	 * @return
+	 */
+	public boolean checkSanity() {
+		boolean sane = true;
+		int depth = 0;
+		
+		for(Locus ind : pop) {
+			while(ind.getParent() != root) {
+				if (ind.getParent()==null) {
+					sane = false;
+					System.err.println("Individual " + ind.getID() + " has a null parent at depth: " + depth);
+				}
+				else {
+					Locus parent = ind.getParent();
+					if (! parent.getOffspring().contains(ind)) {
+						System.err.println("Parent/offspring links are inconsistent for parent: " + parent.getID() + " at depth: " + depth);
+						sane = false;
+					}
+				}
+
+				if (ind.hasRecombination()) {
+					if (ind != ind.getRecombinationPartner().getRecombinationPartner()) {
+						System.err.println("Recombination links are inconsistent for ind: " + ind.getID() + " at depth: " + depth);
+						sane = false;
+					}
+				}
+
+				depth++;
+				ind = ind.getParent();
+			}
+		}
+		
+		return sane;
+	}
+	
+	/**
 	 * Construct the genealogy of the given sample of individuals. All individuals in actualKids are cloned to produce the genealogy 
 	 * so they are not actually members of the newly created tree (although they will have the same ID & data as those individuals 
 	 * in the tips of the tree). 
@@ -533,10 +570,10 @@ public class Population implements Serializable, Collectible {
 	public Locus getSampleTree(ArrayList<Locus> sampleKids) {
 		ArrayList<Locus> actualKids = findPopulationIndsForSample(sampleKids);
 		
-//		boolean sane = checkSanity();
-//		if (sane) {
-//			System.out.println("Population appears to be sane");
-//		}
+		boolean sane = checkSanity();
+		if (!sane) {
+			throw new IllegalStateException("Population is not sane!");
+		}
 		
 		for(Locus kid : actualKids) {
 			Locus sampleKid = kid.getDataCopy();
@@ -880,7 +917,7 @@ public class Population implements Serializable, Collectible {
 		//System.out.println("Releasing " + preservedIndividuals.size() + " preserved inds ");
 		for(Locus ind : preservedIndividuals) {
 			if (ind.numOffspring()==0 && !pop.contains(ind)) { //Remove all inds not in the current generation
-				ind.removeFromPop();
+				releaseIndividual(ind);
 			}		
 		}
 		

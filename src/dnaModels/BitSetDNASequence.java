@@ -199,8 +199,5 @@ public class BitSetDNASequence extends DNASequence {
 	public String toString() {
 		return getStringValue();
 	}
-
-
-	
 	
 }

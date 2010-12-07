@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.BitSet;
 
 import population.Inheritable;
+import population.Recombineable;
 
 import siteModels.CodonUtils;
 import siteModels.CodonUtils.AminoAcid;
@@ -25,7 +26,7 @@ import cern.jet.random.engine.RandomEngine;
  * @author brendan
  *
  */
-public abstract class DNASequence implements Inheritable, Serializable {
+public abstract class DNASequence implements Inheritable, Recombineable, Serializable {
 
 	protected MutationModel mutationModel;
 	protected static Uniform uniGen = null; //Keep this static so it's not cloned when we copy this sequence. 
@@ -130,6 +131,29 @@ public abstract class DNASequence implements Inheritable, Serializable {
 		return codon.toString();
 	}
 	
+	/**
+	 * Obtain a string of bases in range min..max. The result of this function is used for recombination
+	 * purposes
+	 */
+	public Object getRegion(int min, int max) {
+		StringBuilder region = new StringBuilder();
+		for(int i=min; i<max; i++)
+			region.append(getBaseChar(i));
+		return region.toString();
+	}
+	
+	
+	/**
+	 * Region is assumed to be a String of characters corresponding to bases, we set the bases in this
+	 * sequence in the range min..max to be those provided by the string 
+	 */
+	public void setRegion(int min, int max, Object region) {
+		if (region instanceof String) {
+			String str = (String)region;
+			for(int i=min; i<max; i++)
+				setBaseChar(i, str.charAt(i-min));
+		}
+	}
 	
 	/***** Deprecated methods ************/
 	

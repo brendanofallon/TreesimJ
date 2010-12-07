@@ -70,7 +70,7 @@ public class IslandDemoModel extends MultiPopDemoModel {
 		while(inds.size()>0) {
 			Locus ind = inds.pop();
 			count++;
-			if (ind.isLeaf()) {
+			if (ind.isTip()) {
 				tips++;
 			}
 			for(Locus kid : ind.getOffspring())

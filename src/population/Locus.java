@@ -4,10 +4,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import treesimj.Individual;
-import treesimj.RecombinantLocus;
-import treesimj.Recombineable;
-
 import cern.jet.random.engine.RandomEngine;
 import dnaModels.DNASequence;
 import fitnessProviders.FitnessProvider;
@@ -30,7 +26,7 @@ public class Locus implements Serializable {
 	protected Locus parent;				//Parent individual
 	protected RandomEngine rng;
 	protected String label;	
-	protected int depth = -1; //Handy for use when traversing big trees
+	protected int depth = -1; 			//Handy for use when traversing big trees
 	protected int originPop = -1; 		//In multiple population models, the pop number in which this individual was created. -1 signals nothing has been set. 
 	
 	protected String pop = "Main population";
@@ -184,29 +180,29 @@ public class Locus implements Serializable {
 	 * serial-sampling stuff, which is not implemented in a release version)
 	 * 
 	 */
-	public void removeFromPop() {
-		if (preserve)
-			return;
-		
-		int depth = 0;
-		Locus ref = this;
-		
-		while(ref.getParent().numOffspring()==1 && !ref.getParent().isPreserve()) {
-			ref = ref.getParent();
-			if (ref.getParent()==null) {
-				System.out.println("Individual has no parent at depth: " + depth);
-				System.out.println("ID is : " + ref.getReadableID());
-			}
-			depth++;
-		}
-
-		
-		ref.getParent().removeOffspring(ref);
-		ref.setParent(null);
-	}
+//	public void removeFromPop() {
+//		if (preserve)
+//			return;
+//		
+//		int depth = 0;
+//		Locus ref = this;
+//		
+//		while(ref.getParent().numOffspring()==1 && !ref.getParent().isPreserve()) {
+//			ref = ref.getParent();
+//			if (ref.getParent()==null) {
+//				System.out.println("Individual has no parent at depth: " + depth);
+//				System.out.println("ID is : " + ref.getReadableID());
+//			}
+//			depth++;
+//		}
+//
+//		
+//		ref.getParent().removeOffspring(ref);
+//		ref.setParent(null);
+//	}
 	
 	/**
-	 * Return the number of generations (Individuals / nodes in the tree) between this individual and 
+	 * Return the number of generations between this individual and 
 	 * the root
 	 * @return
 	 */

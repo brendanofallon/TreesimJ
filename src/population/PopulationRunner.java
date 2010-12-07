@@ -212,7 +212,7 @@ public class PopulationRunner {
 		int COLLECT_OFFSET = 0;
 		int lastProgressVal = 0;
 		
-		boolean useSerialSampler = true;	//Whether or not to use the experimental serial tree sampling scheme
+		boolean useSerialSampler = false;	//Whether or not to use the experimental serial tree sampling scheme
 		
 		TreeSampler treeStatSampler = null; //The sampler that collects trees for statistics use
 		TreeSampler treeDNASampler = null; //The sampler that collects trees for fasta / tree file writing
@@ -277,7 +277,6 @@ public class PopulationRunner {
 			}
 
 		}// else we're using the SerialTreeSampler
-		
 
 
 		//OutputHandler needs a reference to the treesampler for writing both trees and fasta files		
