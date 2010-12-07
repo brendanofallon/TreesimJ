@@ -2,12 +2,17 @@ package population;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.Stack;
+import java.util.TreeSet;
 
 import siteModels.CodonUtils;
 import siteModels.CodonUtils.AminoAcid;
 import statistics.Collectible;
 
+import cern.jet.random.Poisson;
 import cern.jet.random.Uniform;
 import cern.jet.random.engine.RandomEngine;
 import dnaModels.DNASequence;
@@ -30,6 +35,7 @@ public class Population implements Serializable, Collectible {
 	Locus root; //Most basal individual.
 	RandomEngine rng;   //Base random number generator
 	Uniform uniGenerator;  //Generator for uniform random variables
+	Poisson poissonGenerator; //Generator for poisson random vars
 	boolean preserve = false;	//Flag to signal preservation of ancestral genetic data (not always needed, and it saves lots of memory to turn it off)
 	int calls = 0;
 	int currentGen = 0;	//Counts number of calls to newGen
@@ -51,10 +57,10 @@ public class Population implements Serializable, Collectible {
 	 * @param rnger
 	 */
 	public Population() {
-		
 		preservedIndividuals = new ArrayList<Locus>();
 		myPopNumber = getTotalPopCount();
 		totalPopCount++;
+		poissonGenerator = new Poisson(1.0, rng); //The mean gets set later
 	}
 	
 	/**
@@ -65,12 +71,73 @@ public class Population implements Serializable, Collectible {
 	public Population(RandomEngine rnger, int size, boolean preserve, FitnessProvider type) {
 		this.preserve = preserve;
 		uniGenerator = new Uniform(rng);
+		poissonGenerator = new Poisson(1.0, rng); //The mean gets set later
 		preservedIndividuals = new ArrayList<Locus>();
 		initialize(rnger, size, type);
 		myPopNumber = getTotalPopCount();
 		totalPopCount++;
 	}
 	
+	
+	/**
+	 * Created the initial state of the population. One individual, the 'root', is the parent of all individuals 
+	 * in the created generation. Mutate() is also called once on all Individuals. 
+	 * @param N
+	 * @param type
+	 * @param inheritables
+	 * @return the root individual of this population. If autoShortenRoot is on (which it is by default), the root will change over time. 
+	 */
+	public Locus initialize(RandomEngine rnger, int N, FitnessProvider type) {
+		this.rng = rnger;
+		uniGenerator = new Uniform(rng);
+		poissonGenerator = new Poisson(1.0, rng); //The mean gets set later
+		pop = new ArrayList<Locus>();
+		
+		root = new Locus(rng); 
+		root.setParent(null);
+		root.setFitnessProvider( type );
+		
+		for(int i=0; i<N; i++) { 
+			Locus ind = new Locus(rng);
+			ind.copyDataFrom(root);
+			root.addOffspring(ind);
+			ind.setParent(root);
+			ind.mutate();
+			pop.add( ind );
+		}
+
+		return root;
+	}
+
+	/**
+	 * Initialize this population by taking N individuals from the given source Population
+	 * @param rnger
+	 * @param source
+	 * @param N Number of founder individuals in this population
+	 */
+	public void initialize(RandomEngine rnger, Population source, int N ) {
+		this.rng = rnger;
+		uniGenerator = new Uniform(rng);
+		poissonGenerator = new Poisson(1.0, rng); //The mean gets set later
+		List<Locus> founders = source.getSample(N);
+		pop = new ArrayList<Locus>(founders.size());
+		
+		for(Locus founder : founders) {
+			Locus ind = new Locus(rng);
+			ind.setParent(founder);
+			founder.addOffspring(ind);
+			ind.copyDataFrom(founder);
+			
+			if (totalPopCount>1) {
+				ind.setOriginPopulation(myPopNumber);
+			}
+			pop.add(ind);
+		}
+		currentGen = source.getCurrentGenNumber();
+	
+		this.preserve = source.getPreservesAncestralData();
+		root = source.getRoot();
+	}
 	
 	/**
 	 * Turns on / off automatic moving of population root up the tree each round. 
@@ -96,7 +163,7 @@ public class Population implements Serializable, Collectible {
 	 * @return
 	 */
 	public FitnessProvider getFitnessModel() {
-		return pop.get(0).fitnessData;
+		return pop.get(0).getFitnessData();
 	}
 	
 	/**
@@ -130,6 +197,132 @@ public class Population implements Serializable, Collectible {
 			ErrorWindow.showErrorWindow(new IllegalStateException("Cannot set the master sequence for individuals with no DNA fitness model"));
 		}
 
+	}
+	
+	
+	/**
+	 * Find the most recent common ancestor that is the parent of all individuals in the given sample. This method is 
+	 * recombination aware.  
+	 * @param sample
+	 */
+	public Locus findFC(List<Locus> sample) {
+		int depth = 0;
+		
+		Set<Locus> parentSet = new HashSet<Locus>();
+		
+		
+		int nodeTotal = 0;
+		//System.out.println("Finding fc...");
+		while(sample.size()>1) {
+//			if (depth%10==0)
+//				System.out.println("Ancestors at depth " + depth + " : " + sample.size());
+			depth++;
+			nodeTotal += sample.size();
+			List<Locus> parents = new ArrayList<Locus>(pop.size());
+			parents.clear();
+			parentSet.clear();
+			
+			for(int i=0; i<sample.size(); i++) {
+				//If the parent is not already in the list, add it
+				if (! parentSet.contains(sample.get(i).getParent())) {
+					parents.add(sample.get(i).getParent());
+					parentSet.add(sample.get(i).getParent());
+					
+				}
+				
+				//If this sample has a recombination, then we also add it's recomb. partner's parent. 
+				if (sample.get(i).hasRecombination()) {
+					Locus partner = sample.get(i).getRecombinationPartner();
+					if (partner == null) {
+						System.out.println("Yikes! Recomb. partner is null!");
+					}
+					if (partner.getParent()==null) {
+						System.out.println("This node: " + sample.get(i).getReadableID() + " partner: " + partner.getReadableID());
+						System.out.println("Yikes, recomb. partner's parent is null!");
+					}
+					if (! parentSet.contains( sample.get(i).getRecombinationPartner().getParent())) {
+						parents.add( sample.get(i).getRecombinationPartner().getParent() );
+						parentSet.add( sample.get(i).getRecombinationPartner().getParent() );
+					}
+				}
+			}
+			//System.out.println("tree size at depth " + depth + " : " + sample.size() );
+			sample = parents;
+		}
+		
+		//System.out.println("..done");
+		
+//		if (getCurrentGenNumber()%10==0)
+//			System.out.println("Current gen: "+ getCurrentGenNumber() + " FC depth : " + depth + " total nodes: " + nodeTotal);
+		return sample.get(0);
+	}
+	
+	
+	/**
+	 * Creates a list containing newly created individuals who are the parents of the 'kids', without repetition (no duplicate parents),
+	 * and copying the parent-offspring relations of the kids and their real parents. The new parental generation
+	 * is attached to the sampleKid generation via parent-offspring references
+	 * @param kids
+	 */
+	private void createSampleParents(ArrayList<Locus> actualKids, ArrayList<Locus> sampleKids) {
+		ArrayList<Locus> parents = new ArrayList<Locus>(); //The actual parents of the kids (in the persistent pop)
+		ArrayList<Locus> sampleParents = new ArrayList<Locus>(); //The sampled (copied) parents
+		
+		for(Locus kid : actualKids) {
+			Locus actualPartner = (Locus) kid.getRecombinationPartner();
+			Locus samplePartner = null;
+			if (actualPartner != null && (!actualKids.contains(actualPartner))) {
+				samplePartner = actualPartner.getDataCopy();
+				samplePartner.setID( actualPartner.getID());
+				Locus samplePartnerParent = actualPartner.getParent().getDataCopy();
+				Locus actualPartnerParent = actualPartner.getParent();
+				
+				samplePartnerParent.setID( actualPartnerParent.getID());
+				
+				samplePartnerParent.addOffspring(samplePartner);
+				samplePartner.setParent(samplePartnerParent);
+				
+				if ( ! parents.contains(actualPartnerParent) ) {
+					parents.add( actualPartnerParent);
+					if (sampleParents.contains(samplePartnerParent)) {
+						System.err.println("Hmm, actual parents didn't contain the recomb. partner parent, but sampleParents already contains it. This is probably an error");
+					}
+					else {
+						sampleParents.add(samplePartnerParent);
+					}
+				}
+				
+			}
+			
+			
+			if ( findIndByID(parents, kid.getParent().getID())!=null ) {	//The parent of kid is already in the list of parents, all we have to do is update references  
+				Locus sampleParent = findIndByID(sampleParents, kid.getParent().getID());
+				Locus sampleKid = findIndByID(sampleKids, kid.getID());
+				if (sampleKid==null) 
+					System.err.println("2: Uh-oh, could not find sampleKid with id=" + kid.getID()  );
+				sampleParent.addOffspring( sampleKid );
+				sampleKid.setParent( sampleParent);
+			}
+			else {	//The parent of kid is not in the list of sampled parents, so we must create a copy of the parent and add it to sampleParents
+				parents.add( kid.getParent() );
+				Locus sampleParent = kid.getParent().getDataCopy();
+				sampleParent.setID( kid.getParent().getID() );
+				
+				Locus sampleKid = findIndByID(sampleKids, kid.getID());
+				if (sampleKid==null) 
+					System.err.println("1: Uh-oh, could not find sampleKid with id=" + kid.getID()  );
+				sampleParent.addOffspring(sampleKid);
+				sampleKid.setParent( sampleParent );
+				
+				sampleParents.add( sampleParent );
+			}
+		}
+		
+
+		sampleKids.clear();
+		sampleKids.addAll(sampleParents);
+		actualKids.clear();
+		actualKids.addAll(parents);
 	}
 	
 	/**
@@ -255,9 +448,79 @@ public class Population implements Serializable, Collectible {
 	}
 	
 
+	/**
+	 * For each individual in sample list, find the individual in the current population with matching id, and return them
+	 * all in a list.
+	 * @param sample
+	 * @return List of individuals from current population whose ID's match the sample individual id's
+	 */
+	public ArrayList<Locus> findPopulationIndsForSample(List<Locus> sample) {
+		ArrayList<Locus> popInds = new ArrayList<Locus>();
+		
+		for(Locus ind : sample) {
+			Locus popInd = findIndByID(pop, ind.getID());
+			popInds.add(popInd);
+		}
+		
+		return popInds;
+	}
 	
 	/**
-	 * Returns a sample of size sampleSize - and re-creates the whole tree structure of their ancestors
+	 * Construct the genealogy of the given sample of individuals. All individuals in actualKids are cloned to produce the genealogy 
+	 * so they are not actually members of the newly created tree (although they will have the same ID & data as those individuals 
+	 * in the tips of the tree). 
+	 * 
+	 * @param sample A list of individuals,  whose genealogy is to be constructed.
+	 * @return The root of the newly created genealogy
+	 */
+	public Locus getSampleTree(ArrayList<Locus> sampleKids) {
+		ArrayList<Locus> actualKids = findPopulationIndsForSample(sampleKids);
+		
+//		boolean sane = checkSanity();
+//		if (sane) {
+//			System.out.println("Population appears to be sane");
+//		}
+		
+		for(Locus kid : actualKids) {
+			Locus sampleKid = kid.getDataCopy();
+			sampleKid.setPop("sample");
+			sampleKid.setID( kid.getID() );
+			sampleKids.add( sampleKid );
+		}
+		
+		int iteration = 0;
+		while(iteration < 5000000 && sampleKids.size()>1) {
+			iteration++;
+			//System.out.println("Iteration : " + iteration + " actual kids: " + actualKids.size() + " sample kids : " + sampleKids.size());
+			createSampleParents(actualKids, sampleKids);
+			
+			if (actualKids.size()>1) {
+				for(Locus actualKid : actualKids) {
+					if (actualKid.getParent()==null) {
+						System.out.println("Uh-oh, an actual kid in the genealogy had a null parent (at depth " + iteration + "). Sample size : " + actualKids.size());
+						if (actualKid.hasRecombination()) {
+							System.out.println("Kid has recombination at breakpoints " + actualKid.getBreakPointMin() + "-" + actualKid.getBreakPointMax());
+						}
+						else{
+							System.out.println("Kid has no recombination.");
+						}
+					}
+				}
+			}
+		}
+		
+		if (iteration == 5000000) {
+			System.err.println("Uh-oh, could not find a common ancestor for this sample of individuals (at least, not in 5M generations)");
+			return null;
+		}
+		
+		return sampleKids.get(0);
+	}
+	
+	
+	/**
+	 * Randomly selects sampleSize individuals from the current generation of the population, clones them all (via a call to getDataCopy), and
+	 * then reconstructs the genealogy of the individuals and returns the root. 
 	 * 
 	 * @param sampleSize
 	 * @return The root of the sampled tree 
@@ -266,26 +529,14 @@ public class Population implements Serializable, Collectible {
 		ArrayList<Locus> actualKids = getSample(sampleSize);
 		ArrayList<Locus> sampleKids = new ArrayList<Locus>();
 
-		
 		for(Locus kid : actualKids) {
 			Locus sampleKid = kid.getDataCopy();
+			sampleKid.setPop("sample");
 			sampleKid.setID( kid.getID() );
 			sampleKids.add( sampleKid );
 		}
-		
-		int iteration = 0;
-		while(iteration < 1000000 && sampleKids.size()>1) {
-			iteration++;
-			//System.out.println("Iteration : " + iteration + " actual kids: " + actualKids.size() + " sample kids : " + sampleKids.size());
-			createSampleParents(actualKids, sampleKids);
-		}
-		
-		if (iteration == 1000000) {
-			System.err.println("Uh-oh, could not find a common ancestor for this sample of individuals (at least, not in 10000K generations)");
-			return null;
-		}
-		
-		return sampleKids.get(0);
+	
+		return getSampleTree(sampleKids);
 	}
 	
 	/**
@@ -414,6 +665,136 @@ public class Population implements Serializable, Collectible {
 		 }
 	}
 	
+	
+	/**
+	 * Pick some individuals from the population to recombine, and then recombine them. The 'rate' is the
+	 * individual rate of recombination, such that the total expected number of individuals who recombine this
+	 * generation is rate*N. 
+	 * @param rate Recombination rate, such that expected number of recombinations is N*rate
+	 */
+	protected void recombine(double rate) {
+		int count = 0;
+		poissonGenerator.setMean(rate / 2.0 * pop.size()); //Since each recombination event involves two individuals, rate/2 is the pairwise rate
+		int recombiningPairs = poissonGenerator.nextInt();
+		for(int i=0; i<recombiningPairs; i++) {
+			Locus one = pop.get(uniGenerator.nextIntFromTo(0, pop.size()-1));
+			while( one.hasRecombination() && count < 1000) {
+				one = pop.get(uniGenerator.nextIntFromTo(0, pop.size()-1));
+				count++;
+			}
+			
+			if (count==1000)
+				return;
+			count = 0;
+			Locus two = pop.get(uniGenerator.nextIntFromTo(0, pop.size()-1));
+			while( (two.hasRecombination() || two==one) && count < 1000) {
+				two = pop.get(uniGenerator.nextIntFromTo(0, pop.size()-1));
+				count++;
+			}
+			
+			if (count==1000)
+				return;
+			
+			//System.out.println("Recombining " + ((Individual) one).getReadableID() + " and "+  ((Individual) two).getReadableID() );
+			one.recombine(one, two); //Actually a static method, but since it's from an interfarce it can't actually be static
+		}
+	}
+	
+	/**
+	 * Remove this specific locus from the population and sets all references to and from this locus to null
+	 * @param loc
+	 */
+	private void clearLocus(Locus loc) {
+		//System.out.println("clearing locus " + loc.getID() + " now");
+		if (loc.hasRecombination()) {
+			Locus partner = loc.getRecombinationPartner();
+			if (partner.numOffspring()>0){
+				System.out.println("Hmm...we're clearing an ind. that has recomb. and a partner with > 0 offspring");
+			}
+		}
+		loc.getParent().removeOffspring(loc);
+		loc.clearReferences();
+	}
+	
+	/**
+	 * Attempt to remove the given individual from the population and clear it's links so that it can be garbage collected.
+	 * This is done in a recombination-aware manner, and only releases individuals if they have zero offspring and either
+	 * are have no recombination partner or a recombination partner also with zero offspring. 
+	 * 
+	 * In general, it's not safe to call this haphazardly on just a few individuals from some generation, because it may
+	 * create individuals with null parents. To avoid this, it must be called repeatedly for every releaseable individual
+	 * in a current gerneration.  
+	 * @param loc
+	 * @return
+	 */
+	private int releaseIndividual(Locus loc) {
+		if (loc.numOffspring()>0)
+			return 0;
+		
+		if (loc.getParent()==null) {
+			//This is either the (or a) root or a locus whose recombination partner released it's parent on a previous
+			//call to releaseLocus().. this is valid since loc has no offspring and hence can never be referenced, but, since loc
+			//still exists in the pop list (the vector of parents) this function may be called on it. In this case we can safely ignore
+			//this call, since this locus has already been 'released'
+			return 0;
+		}
+		
+		Stack<Locus> relInds = new Stack<Locus>();
+		Set<Locus> relIndSet = new HashSet<Locus>(); //Another buffer used to quickly look up which parents are already in the stack
+		
+		int tot = 0;
+		Locus locRef;
+	
+		//A stack of loci that are definitely going to be removed.. they're added only if
+		//they have an offspring ref count == 0
+		
+		relInds.clear();
+		relIndSet.clear();
+		relInds.add(loc);
+		relIndSet.add(loc);
+		
+		while(relInds.size()>0) {
+			locRef = relInds.pop();
+
+			if (locRef.numOffspring()!=0) {
+				System.err.println("Hmm, locRef ind has nonzero offspring count");
+			}
+			
+			if (locRef.hasRecombination()) {
+				Locus partner = locRef.getRecombinationPartner();
+				
+				if (partner.numOffspring()==0) {
+					Locus parent = locRef.getParent();
+					
+					clearLocus(locRef);
+					if (parent.numOffspring()==0 && (!relIndSet.contains(parent))) {
+						relInds.add(parent);
+						relIndSet.add(parent);
+					}
+					
+					//We only add if the partner's recombination partner isn't null.. this is because if we already
+					//released the partner it's recomb. ref will be set to null, otherwise we'll end up adding it
+					//to the stack again
+					if (!relIndSet.contains(partner) && partner.getRecombinationPartner()!=null) {
+						relInds.add(partner);
+						relIndSet.add(partner);
+					}
+				}
+			}
+			else {
+				//Only one parent here since there's no recombinations
+				Locus parent = locRef.getParent();
+				
+				clearLocus(locRef);
+				if (parent.numOffspring()==0 && (!relIndSet.contains(parent))) {
+					relInds.add(parent);
+					relIndSet.add(parent);
+				}
+			}
+		}
+		return tot;
+	}
+	
 	/**
 	 * Called to dispose of all preserved individuals. If there are preserved inds and this is not called, the tree
 	 * will grow in size until the heap gets too big, and then the program will crash.
@@ -443,64 +824,7 @@ public class Population implements Serializable, Collectible {
 		shortenRoot();
 	}
 
-	/**
-	 * Created the initial state of the population. One individual, the 'root', is the parent of all individuals 
-	 * in the created generation. Mutate() is also called once on all Individuals. 
-	 * @param N
-	 * @param type
-	 * @param inheritables
-	 * @return the root individual of this population. If autoShortenRoot is on (which it is by default), the root will change over time. 
-	 */
-	public Locus initialize(RandomEngine rnger, int N, FitnessProvider type) {
-		this.rng = rnger;
-		uniGenerator = new Uniform(rng);
-		pop = new ArrayList<Locus>();
-		
-		root = new Locus(rng); 
-		root.setParent(null);
-		root.setFitnessProvider( type );
-		
-		for(int i=0; i<N; i++) { 
-			Locus ind = new Locus(rng);
-			ind.copyDataFrom(root);
-			root.addOffspring(ind);
-			ind.setParent(root);
-			ind.mutate();
-			pop.add( ind );
-		}
 
-		return root;
-	}
-
-	/**
-	 * Initialize this population by taking N individuals from the given source Population
-	 * @param rnger
-	 * @param source
-	 * @param N Number of founder individuals in this population
-	 */
-	public void initialize(RandomEngine rnger, Population source, int N ) {
-		this.rng = rnger;
-		uniGenerator = new Uniform(rng);
-		
-		List<Locus> founders = source.getSample(N);
-		pop = new ArrayList<Locus>(founders.size());
-		
-		for(Locus founder : founders) {
-			Locus ind = new Locus(rng);
-			ind.setParent(founder);
-			founder.addOffspring(ind);
-			ind.copyDataFrom(founder);
-			
-			if (totalPopCount>1) {
-				ind.setOriginPopulation(myPopNumber);
-			}
-			pop.add(ind);
-		}
-		currentGen = source.getCurrentGenNumber();
-	
-		this.preserve = source.getPreservesAncestralData();
-		root = source.getRoot();
-	}
 	
 	/**
 	 * Return the root individual of this population, which is the ancestor of all inds in this pop. Note that this may be
@@ -560,5 +884,6 @@ public class Population implements Serializable, Collectible {
 	public static int getTotalPopCount() {
 		return totalPopCount;
 	}
+
 	
 }
