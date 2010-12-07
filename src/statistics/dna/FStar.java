@@ -31,6 +31,7 @@ public static final String identifier = "Fu & Li's F*";
 	public FStar() {
 		nucD = new NucDiversity();
 		segSites = new SegregatingSites();
+		canHandleRecombination = true;
 	}
 	
 	@Override

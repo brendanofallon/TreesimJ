@@ -25,6 +25,7 @@ public class TajimasD extends DNAStatistic {
 	public TajimasD() {
 		nucD = new NucDiversity();	
 		segSites = new SegregatingSites();	
+		canHandleRecombination = true;
 	}
 	
 	

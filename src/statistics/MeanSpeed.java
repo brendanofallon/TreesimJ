@@ -22,6 +22,7 @@ public class MeanSpeed extends Statistic {
 	
 	public MeanSpeed() {
 		values = new ArrayList<Double>();
+		canHandleRecombination = true;
 	}
 	
 	public MeanSpeed getNew(Options ops) {

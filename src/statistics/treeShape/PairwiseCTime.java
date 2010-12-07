@@ -54,11 +54,22 @@ public class PairwiseCTime extends HistogramStatistic {
 		return String.valueOf(20);
 	}
 	
+	/**
+	 * Return the time until one and two share a common ancestor AT A RANDOMLY SELECTED SITE
+	 * @param one
+	 * @param two
+	 * @return
+	 */
 	private int pcTime(Locus one, Locus two) {
 		int t = 0;
+		
+		int site = 0;
+		if (one.getRecombineableData().length()>0)
+			site = uniGen.nextIntFromTo(0,  one.getRecombineableData().length() );
+		
 		while(one != null && two != null && one != two) {
-			one = one.getParent();
-			two = two.getParent();
+			one = one.getParentForSite(site);
+			two = two.getParentForSite(site);
 			t++;
 		}
 		return t;

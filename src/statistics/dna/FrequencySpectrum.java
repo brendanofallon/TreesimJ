@@ -38,8 +38,6 @@ public class FrequencySpectrum extends DNAStatistic {
 		return false;
 	}
 	
-	
-	
 	@Override
 	public void collect(Collectible pop) {
 		calls++;

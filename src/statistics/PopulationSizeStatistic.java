@@ -12,6 +12,7 @@ public class PopulationSizeStatistic extends Statistic {
 
 	public PopulationSizeStatistic() {
 		formatter = new DecimalFormat("######00");
+		canHandleRecombination = true;
 	}
 	
 	public void collect(Collectible pop) {

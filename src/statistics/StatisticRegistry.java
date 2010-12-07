@@ -18,6 +18,7 @@ import statistics.dna.WattersonsTheta;
 import statistics.fitness.AbsoluteFitnessDistro;
 import statistics.fitness.MeanFitness;
 import statistics.fitness.MeanLineageFitness;
+import statistics.fitness.RelativeFitnessDistro;
 import statistics.fitness.StdevFitness;
 import statistics.fitness.Tau;
 import statistics.treeShape.CladeSizeDistro;

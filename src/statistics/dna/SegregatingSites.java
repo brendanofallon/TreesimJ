@@ -29,6 +29,7 @@ public class SegregatingSites extends DNAStatistic {
 	
 	public SegregatingSites() {
 		values = new ArrayList<Double>();
+		canHandleRecombination = true;
 	}
 	
 	public SegregatingSites getNew(Options ops) {

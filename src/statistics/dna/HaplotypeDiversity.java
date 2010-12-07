@@ -27,6 +27,7 @@ public class HaplotypeDiversity extends DNAStatistic {
 		values = new ArrayList<Double>();
 		haps = new ArrayList<DNASequence>();
 		counts = new ArrayList<Integer>();
+		canHandleRecombination = true;
 	}
 	
 	public HaplotypeDiversity getNew(Options ops) {

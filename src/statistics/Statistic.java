@@ -45,6 +45,10 @@ public abstract class Statistic extends XMLParseable implements Serializable {
 	
 	protected NumberFormat formatter = new DecimalFormat("######0.0####");
 	
+	//Recombination breaks some types of statistics, especially tree-shape stats. Stats that
+	//can operate correctly in the presence of recombination should set this to true. 
+	protected boolean canHandleRecombination = false;
+	
 	/**
 	 * Creates a new statistic and initializes the XMLParseable thingy
 	 */
@@ -74,6 +78,14 @@ public abstract class Statistic extends XMLParseable implements Serializable {
 	
 	public void setRandomEngine(RandomEngine rng) {
 		this.rng = rng;
+	}
+	
+	/**
+	 * Returns true if this statistic can operate correctly in the presence of recombination
+	 * @return
+	 */
+	public boolean canHandleRecombination() {
+		return canHandleRecombination;
 	}
 	
 	/**

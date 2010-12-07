@@ -21,8 +21,6 @@ public class MutNumDistro extends HistogramStatistic {
 
 	public static final String identifier = "Distribution of mutation number";
 	
-
-	
 	PrintStream output;
 	int sampleSize;
 	int calls = 0;
@@ -35,6 +33,7 @@ public class MutNumDistro extends HistogramStatistic {
 		dist_max = 500;
 		bins = 501;
 		histo = new Histogram(bins, dist_min, 1);
+		canHandleRecombination = true;
 	}
 	
 	public MutNumDistro getNew(Options ops) {

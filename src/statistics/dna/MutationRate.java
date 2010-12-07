@@ -1,27 +1,32 @@
 package statistics.dna;
 
+import population.Locus;
 import dnaModels.DNASequence;
 import statistics.Collectible;
 import statistics.Options;
 import statistics.Statistic;
 
+/**
+ * This shoudl use a histogram...
+ * @author brendan
+ *
+ */
 public class MutationRate extends DNAStatistic {
 
 	public static final String identifier = "Mutation rate";
 	
 	public void collect(Collectible pop) {
 		
-		double sum = 0;
 		double count = 0;
 		for(int i=0; i<Math.min(pop.size(), sampleSize); i++) {
-			sum += calculateMuPair(pop.getInd(i).getPrimaryDNA(), pop.getInd(i).getParent().getPrimaryDNA());
+
+			double mu = calculateMu(pop.getInd(i));
+
+			values.add( mu ); 
 			count++;
 		}
 
-		values.add( sum/count );
-
 	}
-	
 	
 	/**
 	 * We need ancestral info
@@ -47,14 +52,27 @@ public class MutationRate extends DNAStatistic {
 	 * @param two
 	 * @return
 	 */
-	private double calculateMuPair(DNASequence one, DNASequence two) {
+	private double calculateMu(Locus loc) {
 		double sum = 0;
-		for(int i=0; i<Math.min(one.length(), two.length()); i++) {
-			if (one.getBaseChar(i)!=two.getBaseChar(i))
-				sum++;
+		DNASequence one = loc.getPrimaryDNA();
+		if (loc.hasRecombination()) {
+			for(int i=0; i<one.length(); i++) {
+				DNASequence two = loc.getParentForSite(i).getPrimaryDNA();
+				if (one.getBaseChar(i)!=two.getBaseChar(i))
+					sum++;
+			}
+
+			return sum/(double)one.length();
 		}
-		
-		return sum/(double)Math.min(one.length(), two.length());
+		else {
+			DNASequence two = loc.getParent().getPrimaryDNA();
+			for(int i=0; i<one.length(); i++) {
+				if (one.getBaseChar(i)!=two.getBaseChar(i))
+					sum++;
+			}
+
+			return sum/(double)one.length();
+		}
 	}
 
 	public String getDescription() {

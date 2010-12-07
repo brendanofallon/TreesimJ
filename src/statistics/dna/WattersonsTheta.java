@@ -20,17 +20,19 @@ public class WattersonsTheta extends DNAStatistic {
 
 	public static final String identifier = "Watterson's Theta";
 
+	NumberFormat formatter = new DecimalFormat("###0.0#");
 	SegregatingSites segSites;
 	
 	public String getIdentifier() {
 		return identifier;
 	}
 	
-	NumberFormat formatter = new DecimalFormat("###0.0#");
+
 	
 	public WattersonsTheta() {
 		segSites = new SegregatingSites();
 		values = new ArrayList<Double>();
+		canHandleRecombination = true;
 	}
 	
 	public WattersonsTheta getNew(Options ops) {

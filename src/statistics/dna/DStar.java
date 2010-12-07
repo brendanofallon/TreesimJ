@@ -28,6 +28,7 @@ public class DStar extends DNAStatistic {
 	
 	public DStar() {
 		segSites = new SegregatingSites();
+		canHandleRecombination = true;
 	}
 	
 	@Override

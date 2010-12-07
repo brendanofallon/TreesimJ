@@ -24,6 +24,7 @@ public class Divergence extends DNAStatistic {
 	public Divergence() {
 		values = new ArrayList<Double>();
 		master = null;
+		canHandleRecombination = true;
 	}
 	
 	public Divergence getNew(Options ops) {

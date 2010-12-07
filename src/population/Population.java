@@ -2,6 +2,7 @@ package population;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -11,6 +12,7 @@ import java.util.TreeSet;
 import siteModels.CodonUtils;
 import siteModels.CodonUtils.AminoAcid;
 import statistics.Collectible;
+import treesimj.Individual;
 
 import cern.jet.random.Poisson;
 import cern.jet.random.Uniform;
@@ -257,6 +259,61 @@ public class Population implements Serializable, Collectible {
 		return sample.get(0);
 	}
 	
+	
+	/**
+	 * Collect 
+	 * @param sample
+	 * @return
+	 */
+	public static List<Integer> collectBreakPoints(List<Locus> sample) {
+		int depth = 0;
+
+		List<Integer> breakpoints = new ArrayList<Integer>();
+		while(sample.size()>1) {
+			//System.out.println("Ancestors at depth " + depth + " : " + sample.size());
+			depth++;
+			List<Locus> parents = new ArrayList<Locus>();
+			
+			for(int i=0; i<sample.size(); i++) {
+				if (sample.get(i)==null) 
+					System.err.println("Found a null individual in the sample. wha?");
+				
+				if (sample.get(i).getParent()==null) {
+					System.err.println("Found an individual in sample that has no parent: " + sample.get(i).getID() + " depth: " + depth + " sample size: " + sample.size());
+					break;
+				}
+				if (! parents.contains(sample.get(i).getParent()))
+					parents.add(sample.get(i).getParent());
+				
+				if (sample.get(i).hasRecombination()) {
+					if (sample.get(i) != sample.get(i).getRecombinationPartner().getRecombinationPartner() ) {
+						System.err.println("Uh-oh, this ind's recombination partner's recombination partner is not this ind.");
+					}
+					
+					Locus recombParent = sample.get(i).getRecombinationPartner().getParent(); 
+					if (recombParent == null) {
+						System.err.println("Parent of individual " + sample.get(i).getRecombinationPartner().getID() + " is null (ind is partner of " + sample.get(i).getID() + ")" );
+						System.err.println("Individual's pop : " + sample.get(i).getPop());
+					}
+					if (! parents.contains( recombParent ))
+						parents.add( recombParent );
+					breakpoints.add(sample.get(i).getBreakPoint());
+				}
+			}
+			
+			//System.out.println("Depth: " + depth + " sample size: " +sample.size());
+			sample = parents;
+			depth++;
+		}
+		
+		Collections.sort(breakpoints);
+		System.out.print("Max depth: " + depth + " Sample BPs : ");
+		for(int i=0; i<breakpoints.size(); i++) {
+			System.out.print(breakpoints.get(i) + ", ");
+		}
+		System.out.println();
+		return breakpoints;
+	}
 	
 	/**
 	 * Creates a list containing newly created individuals who are the parents of the 'kids', without repetition (no duplicate parents),
@@ -571,6 +628,12 @@ public class Population implements Serializable, Collectible {
 			throw new IllegalStateException("List is null, for pop #" + myPopNumber);
 		}
 		
+		if (currentGen % 10 ==0) {
+			root = findFC(pop);
+			root.setParent(null);
+		}
+		shortenRoot();
+		
 		while(newPop.size() < newSize) {
 			int who = uniGenerator.nextIntFromTo(0, pop.size()-1);
 			Locus parent = pop.get( who );
@@ -633,7 +696,7 @@ public class Population implements Serializable, Collectible {
 			}
 			else {
 				if (ind.numOffspring()==0 && !ind.isPreserve())
-					ind.removeFromPop();
+					releaseIndividual(ind);
 			}
 		}
 		
@@ -652,14 +715,15 @@ public class Population implements Serializable, Collectible {
 //			 }
 //		 }
 		 
+		 recombine(0.001);
 		 calls++;
 	}
 	
 	/**
-	 * Move the root toward the tips while root has only a single offspring
+	 * Move the root toward the tips while root has only a single offspring and no recombinations 
 	 */
 	public void shortenRoot() {
-		 while(root.numOffspring()==1) {
+		 while(root.numOffspring()==1 && !root.hasRecombination()) {
 			 root.setParent(null);
 			 root = root.getOffspring(0);
 		 }
@@ -696,7 +760,7 @@ public class Population implements Serializable, Collectible {
 				return;
 			
 			//System.out.println("Recombining " + ((Individual) one).getReadableID() + " and "+  ((Individual) two).getReadableID() );
-			one.recombine(one, two); //Actually a static method, but since it's from an interfarce it can't actually be static
+			Locus.recombine(one, two); //Actually a static method, but since it's from an interfarce it can't actually be static
 		}
 	}
 	

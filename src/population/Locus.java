@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import treesimj.Individual;
 import treesimj.RecombinantLocus;
 import treesimj.Recombineable;
 
@@ -22,26 +23,25 @@ import fitnessProviders.FitnessProvider;
  */
 public class Locus implements Serializable {
 
-	private FitnessProvider fitnessData; //Describes fitness
-	private double relativeFitness; 	//Fitness relative to population average in this generation - set & used by Population
-	private long id;					//An almost certainly unique id
-	private ArrayList<Locus> offspring; //List of all offspring individuals
-	private Locus parent;				//Parent individual
-	private RandomEngine rng;
-	private String label;	
-	private int depth = -1; //Handy for use when traversing big trees
-	private int originPop = -1; 		//In multiple population models, the pop number in which this individual was created. -1 signals nothing has been set. 
+	protected FitnessProvider fitnessData; //Describes fitness
+	protected double relativeFitness; 	//Fitness relative to population average in this generation - set & used by Population
+	protected long id;					//An almost certainly unique id
+	protected ArrayList<Locus> offspring; //List of all offspring individuals
+	protected Locus parent;				//Parent individual
+	protected RandomEngine rng;
+	protected String label;	
+	protected int depth = -1; //Handy for use when traversing big trees
+	protected int originPop = -1; 		//In multiple population models, the pop number in which this individual was created. -1 signals nothing has been set. 
 	
-	private String pop = "Main population";
+	protected String pop = "Main population";
 	
-	boolean preserve; //A flag to indicate whether or not this individual can be cleared from the population. Used for serial-tree sampling
+	protected boolean preserve; //A flag to indicate whether or not this individual can be cleared from the population. Used for serial-tree sampling
 	
 	//Potentially null, this is a member of the same generation as this ind with whom we've exchanged genetic info via 'recombine'
-	private Locus recombinationPartner = null;
+	protected Locus recombinationPartner = null;
 	
-	private int breakPointMin = 0; //These variables specify the boundaries of the recombinant region, such that this part of the chromosome is assumed
-	private int breakPointMax = 0; //to have actually come from the locus 'recomPartner'	
-
+	protected int breakPointMin = 0; //These variables specify the boundaries of the recombinant region, such that this part of the chromosome is assumed
+	protected int breakPointMax = 0; //to have actually come from the locus 'recomPartner'	
 	
 	public Locus(RandomEngine rng) {
 		offspring = new ArrayList<Locus>(2);
@@ -387,20 +387,25 @@ public class Locus implements Serializable {
 		recombinationPartner = null;
 	}
 	
-	
-	public void recombine(Locus one, Locus two) {
+	/**
+	 * Actually performs the recombination. A single breakpoint is selected with uniform probability everywhere,
+	 * and then we decide whether to swap segments either above or below the breakpoint with equal probability. 
+	 * @param one
+	 * @param two
+	 */
+	public static void recombine(Locus one, Locus two) {
 		if (one.hasRecombination() || two.hasRecombination()) {
 			throw new IllegalArgumentException("one of the recombining inds already has a breakpoint");
 		}
 		
 		//We try to find a site that is not at zero or the end.. not sure what would happen then
-		double min = Math.min(one.getRecombineableData().getLength(), two.getRecombineableData().getLength())-1;
+		double min = Math.min(one.getRecombineableData().length(), two.getRecombineableData().length())-1;
 		int site = (int)Math.floor( min*Math.random() )+1;
 		while (site==0) {
 			site = (int)Math.floor( min*Math.random() )+1;
 		}
 		
-		if (site==0 || site==one.getLength()) {
+		if (site==0 || site==one.getRecombineableData().length()) {
 			System.out.println("Hmm, we managed to pick a recombination site at the edge..");
 		}
 		
@@ -409,16 +414,16 @@ public class Locus implements Serializable {
 		if (upper) {
 			//System.out.println("Recombining upper portions of " + one.getID() + " and " + two.getID() + " at site " + site);
 			//System.out.println("Parent of one is: " + one.getUpperParent() + "\n parent of two is: " + two.getUpperParent());		
-			one.setRecombinationPartner(site, one.getLength(), two);
-			two.setRecombinationPartner(site, one.getLength(), one);
+			one.setRecombinationPartner(site, one.getRecombineableData().length(), two);
+			two.setRecombinationPartner(site, one.getRecombineableData().length(), one);
 			
 			Recombineable rOne = one.getRecombineableData();
 			Recombineable rTwo = two.getRecombineableData();
 			
-			Object rOneData = rOne.getRegion(site, one.getLength());
-			Object rTwoData = rTwo.getRegion(site, one.getLength());
-			rOne.setRegion(site, one.getLength(), rTwoData);
-			rTwo.setRegion(site, one.getLength(), rOneData);
+			Object rOneData = rOne.getRegion(site, one.getRecombineableData().length());
+			Object rTwoData = rTwo.getRegion(site, one.getRecombineableData().length());
+			rOne.setRegion(site, one.getRecombineableData().length(), rTwoData);
+			rTwo.setRegion(site, one.getRecombineableData().length(), rOneData);
 		}
 		else {
 			//System.out.println("Recombining lower portions of " + one.getID() + " and " + two.getID() + " at site " + site);
@@ -436,7 +441,24 @@ public class Locus implements Serializable {
 		}
 	}
 
-	 
+	/**
+	 * This is the function that is called to set recombination information for this Individual. 
+	 */
+	public void setRecombinationPartner(int min, int max, Locus partner) {
+		if (fitnessData instanceof Recombineable) {
+			this.breakPointMin = min;
+			this.breakPointMax = max;
+			this.recombinationPartner = partner;
+		}
+		else {
+			throw new IllegalStateException("Cannot recombine non-recombineable fitness data...");
+		}
+	}
+	
+	/**
+	 * Obtain the actual substrate that can recombine (usually DNA) 
+	 * @return
+	 */
 	public Recombineable getRecombineableData() {
 		if (fitnessData instanceof Recombineable) 
 			return (Recombineable)fitnessData;
@@ -450,8 +472,8 @@ public class Locus implements Serializable {
 	 * or lower half of the segment is the recombinant one 
 	 * @return
 	 */
-//	public int getBreakPoint() {
-//		return breakPointMin > 0 ? breakPointMin : breakPointMax;
-//	}
+	public int getBreakPoint() {
+		return breakPointMin > 0 ? breakPointMin : (breakPointMax-1);
+	}
 	
 }

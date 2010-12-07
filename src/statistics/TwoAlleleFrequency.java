@@ -11,7 +11,9 @@ public class TwoAlleleFrequency extends Statistic {
 		return identifier;
 	}
 	
-	public TwoAlleleFrequency() { };
+	public TwoAlleleFrequency() { 
+		canHandleRecombination = true;
+	}
 	
 	public TwoAlleleFrequency getNew(Options ops) {
 		this.options = ops;
