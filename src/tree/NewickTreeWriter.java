@@ -8,7 +8,7 @@ import java.io.IOException;
  * @author brendan
  *
  */
-public class NewickTreeWriter {
+public class NewickTreeWriter implements TreeWriter {
 
 	public void writeTree(DiscreteGenTree tree, BufferedWriter writer)
 	throws IOException {

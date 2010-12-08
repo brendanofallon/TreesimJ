@@ -6,6 +6,7 @@ import java.util.List;
 import population.Locus;
 import population.Population;
 import statistics.Collectible;
+import tree.DiscreteGenTree;
 import cern.jet.random.Uniform;
 import cern.jet.random.engine.RandomEngine;
 
@@ -136,7 +137,7 @@ public class MultiPopCollectible implements Collectible {
 
 	
 	
-	public Locus getSampleTree(int sampleSize) {
+	public DiscreteGenTree getSampleTree(int sampleSize) {
 		List<Locus> actualKids = getSample(sampleSize);
 		List<Locus> sampleKids = new ArrayList<Locus>();
 
@@ -159,7 +160,7 @@ public class MultiPopCollectible implements Collectible {
 			return null;
 		}
 		
-		return sampleKids.get(0);
+		return new DiscreteGenTree(sampleKids.get(0), sampleKids);
 	}
 
 	

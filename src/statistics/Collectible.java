@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import population.Locus;
+import tree.DiscreteGenTree;
 
 /**
  * An interface for those items from which groups of Individuals may be sampled. These types of objects are passed
@@ -24,7 +25,7 @@ public interface Collectible {
 	
 	public List<Locus> getList();
 	
-	public Locus getSampleTree(int sampleSize);
+	public DiscreteGenTree getSampleTree(int sampleSize);
 	
 	public void releasePreservedInds();
 	

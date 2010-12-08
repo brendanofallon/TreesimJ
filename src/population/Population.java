@@ -12,6 +12,7 @@ import java.util.TreeSet;
 import siteModels.CodonUtils;
 import siteModels.CodonUtils.AminoAcid;
 import statistics.Collectible;
+import tree.DiscreteGenTree;
 
 import cern.jet.random.Poisson;
 import cern.jet.random.Uniform;
@@ -214,8 +215,8 @@ public class Population implements Serializable, Collectible {
 		int nodeTotal = 0;
 		//System.out.println("Finding fc...");
 		while(sample.size()>1) {
-			if (getCurrentGenNumber()%100==0 && depth%10==0)
-				System.out.println("Ancestors at depth " + depth + " : " + sample.size());
+//			if (getCurrentGenNumber()%100==0 && depth%10==0)
+//				System.out.println("Ancestors at depth " + depth + " : " + sample.size());
 			depth++;
 			nodeTotal += sample.size();
 			List<Locus> parents = new ArrayList<Locus>(pop.size());
@@ -227,7 +228,6 @@ public class Population implements Serializable, Collectible {
 				if (! parentSet.contains(sample.get(i).getParent())) {
 					parents.add(sample.get(i).getParent());
 					parentSet.add(sample.get(i).getParent());
-					
 				}
 				
 				//If this sample has a recombination, then we also add it's recomb. partner's parent. 
@@ -259,60 +259,7 @@ public class Population implements Serializable, Collectible {
 	}
 	
 	
-	/**
-	 * Collects the positions of all breakpoints ancestral to the sample of individuals 
-	 * @param sample
-	 * @return
-	 */
-	public static List<Integer> collectBreakPoints(List<Locus> sample) {
-		int depth = 0;
 
-		List<Integer> breakpoints = new ArrayList<Integer>();
-		while(sample.size()>1) {
-			//System.out.println("Ancestors at depth " + depth + " : " + sample.size());
-			depth++;
-			List<Locus> parents = new ArrayList<Locus>();
-			
-			for(int i=0; i<sample.size(); i++) {
-				if (sample.get(i)==null) 
-					System.err.println("Found a null individual in the sample. wha?");
-				
-				if (sample.get(i).getParent()==null) {
-					System.err.println("Found an individual in sample that has no parent: " + sample.get(i).getID() + " depth: " + depth + " sample size: " + sample.size());
-					break;
-				}
-				if (! parents.contains(sample.get(i).getParent()))
-					parents.add(sample.get(i).getParent());
-				
-				if (sample.get(i).hasRecombination()) {
-					if (sample.get(i) != sample.get(i).getRecombinationPartner().getRecombinationPartner() ) {
-						System.err.println("Uh-oh, this ind's recombination partner's recombination partner is not this ind.");
-					}
-					
-					Locus recombParent = sample.get(i).getRecombinationPartner().getParent(); 
-					if (recombParent == null) {
-						System.err.println("Parent of individual " + sample.get(i).getRecombinationPartner().getID() + " is null (ind is partner of " + sample.get(i).getID() + ")" );
-						System.err.println("Individual's pop : " + sample.get(i).getPop());
-					}
-					if (! parents.contains( recombParent ))
-						parents.add( recombParent );
-					breakpoints.add(sample.get(i).getBreakPoint());
-				}
-			}
-			
-			//System.out.println("Depth: " + depth + " sample size: " +sample.size());
-			sample = parents;
-			depth++;
-		}
-		
-		Collections.sort(breakpoints);
-		System.out.print("Max depth: " + depth + " Sample BPs : ");
-		for(int i=0; i<breakpoints.size(); i++) {
-			System.out.print(breakpoints.get(i) + ", ");
-		}
-		System.out.println();
-		return breakpoints;
-	}
 	
 	/**
 	 * Creates a list containing newly created individuals who are the parents of the 'kids', without repetition (no duplicate parents),
@@ -325,8 +272,9 @@ public class Population implements Serializable, Collectible {
 		ArrayList<Locus> sampleParents = new ArrayList<Locus>(); //The sampled (copied) parents
 		
 		for(Locus kid : actualKids) {
-			Locus actualPartner = (Locus) kid.getRecombinationPartner();
+			Locus actualPartner = kid.getRecombinationPartner();
 			Locus samplePartner = null;
+			//
 			if (actualPartner != null && (!actualKids.contains(actualPartner))) {
 				samplePartner = actualPartner.getDataCopy();
 				samplePartner.setID( actualPartner.getID());
@@ -372,6 +320,8 @@ public class Population implements Serializable, Collectible {
 				
 				sampleParents.add( sampleParent );
 			}
+		
+			
 		}
 		
 
@@ -564,30 +514,40 @@ public class Population implements Serializable, Collectible {
 	 * so they are not actually members of the newly created tree (although they will have the same ID & data as those individuals 
 	 * in the tips of the tree). 
 	 * 
+	 * The reason this is currently private is that we need to set some information in the sampleKids prior to cloning - namely their full ID,
+	 * but also some debugging stuff like 'population'. This is done in getSampleTree(int) but not here since we don't
+	 * want to do it twice... so for now we only support sampling trees from randomly selected individuals
+	 * 
 	 * @param sample A list of individuals,  whose genealogy is to be constructed.
 	 * @return The root of the newly created genealogy
 	 */
-	public Locus getSampleTree(ArrayList<Locus> sampleKids) {
-		ArrayList<Locus> actualKids = findPopulationIndsForSample(sampleKids);
+	private DiscreteGenTree getSampleTree(ArrayList<Locus> sample) {
+		ArrayList<Locus> actualKids = findPopulationIndsForSample(sample);
+		
+		ArrayList<Locus> sampleKids = new ArrayList<Locus>();
+		sampleKids.addAll(sample);
 		
 		boolean sane = checkSanity();
 		if (!sane) {
 			throw new IllegalStateException("Population is not sane!");
 		}
 		
-		for(Locus kid : actualKids) {
-			Locus sampleKid = kid.getDataCopy();
-			sampleKid.setPop("sample");
-			sampleKid.setID( kid.getID() );
-			sampleKids.add( sampleKid );
-		}
-		
 		int iteration = 0;
 		while(iteration < 5000000 && sampleKids.size()>1) {
 			iteration++;
 			//System.out.println("Iteration : " + iteration + " actual kids: " + actualKids.size() + " sample kids : " + sampleKids.size());
+			
+			System.out.print("Depth: " + iteration + " : \n");
+			for(Locus sampKid : sampleKids)
+				System.out.print(sampKid.getID() + "\t");
+			System.out.println();
+			for(Locus actKid : actualKids)
+				System.out.print(actKid.getID() + "\t");
+			System.out.println();
+			
 			createSampleParents(actualKids, sampleKids);
 			
+
 			if (actualKids.size()>1) {
 				for(Locus actualKid : actualKids) {
 					if (actualKid.getParent()==null) {
@@ -608,7 +568,8 @@ public class Population implements Serializable, Collectible {
 			return null;
 		}
 		
-		return sampleKids.get(0);
+		System.out.println("Found sample MRCA on iteration " + iteration);
+		return new DiscreteGenTree(sampleKids.get(0), sample);
 	}
 	
 	
@@ -619,7 +580,7 @@ public class Population implements Serializable, Collectible {
 	 * @param sampleSize
 	 * @return The root of the sampled tree 
 	 */
-	public Locus getSampleTree(int sampleSize) {
+	public DiscreteGenTree getSampleTree(int sampleSize) {
 		ArrayList<Locus> actualKids = getSample(sampleSize);
 		ArrayList<Locus> sampleKids = new ArrayList<Locus>();
 

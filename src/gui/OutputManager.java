@@ -1,5 +1,6 @@
 package gui;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -24,6 +25,9 @@ import statistics.Statistic;
 import statistics.TreeCollectionListener;
 import statistics.TreeSampler;
 import tree.DiscreteGenTree;
+import tree.NeXMLWriter;
+import tree.NewickTreeWriter;
+import tree.TreeWriter;
 import treesimj.SerializablePrintStream;
 import treesimj.TreesimJApp;
 import treesimj.TreesimJView;
@@ -51,30 +55,32 @@ import fitnessProviders.FitnessProvider;
  */
 public class OutputManager implements Serializable {
 
-	ArrayList<SerializablePrintStream> streams; //Print log files to these streams
-	SerializablePrintStream summaryStream;		//Print summary to this stream
+	protected ArrayList<SerializablePrintStream> streams; //Print log files to these streams
+	protected SerializablePrintStream summaryStream;		//Print summary to this stream
 	
-	SerializablePrintStream treesStream = null;		//Trees are written, in newick form, to this stream
+	protected SerializablePrintStream treesStream = null;		//Trees are written, in newick form, to this stream
 	
-	boolean writeFasta = false;		//True if any writing of DNA is to happen
-	boolean writeSeparateFastas = false;
-	boolean writeTreesWithFasta = false;
+	protected boolean writeFasta = false;			//True if any writing of DNA is to happen
+	protected boolean writeSeparateFastas = false;
+	protected boolean writeTreesWithFasta = false;
 
 
-	SerializablePrintStream fastaStream = null;
-	String fastaFileStem = "";		//File stem to use for fasta file writing
-	int fastasWritten = 0;			//Total number of fasta files written, if writing separate fasta files
+	protected SerializablePrintStream fastaStream = null;
+	protected String fastaFileStem = "";			//File stem to use for fasta file writing
+	protected int fastasWritten = 0;				//Total number of fasta files written, if writing separate fasta files
 	
-	ArrayList<Statistic> statList; //Print logs for these Statistics
+	protected ArrayList<Statistic> statList; 		//Print logs for these Statistics
 	
-	StringBuilder summaryHeader; //Stores information regarding the header for the summary
+	protected StringBuilder summaryHeader;		 //Stores information regarding the header for the summary
 	
-	Date startTime;
-	Date endTime;
+	protected Date startTime;
+	protected Date endTime;
 	
-	DemographicModel demoModel = null; //This is just used to get the current generation number
+	protected DemographicModel demoModel = null; //This is just used to get the current generation number
 	
-	int repeatNumber = 0;
+	protected int repeatNumber = 0; 		//Experimental, not currently in use
+	
+	protected TreeWriter treeWriter = new NeXMLWriter(); 
 	
 	//Maintain a static reference so we can access this easily from a variety of places
 	public static OutputManager globalOutputHandler;
@@ -103,6 +109,10 @@ public class OutputManager implements Serializable {
 	 */
 	public void setWriteTreesWithFasta(boolean writeTreesWithFasta) {
 		this.writeTreesWithFasta = writeTreesWithFasta;
+	}
+	
+	public void setTreeWriter(TreeWriter writer) {
+		this.treeWriter = writer;
 	}
 	
 	/**
@@ -263,25 +273,23 @@ public class OutputManager implements Serializable {
 				String fastaFileName = fastaFileStem + /*"_g" + String.valueOf(demoModel.getCurrentGenNumber()) + rNum + */ ".fas";
 				String treeFileName = fastaFileStem +  /* "_tree_g" + String.valueOf(demoModel.getCurrentGenNumber()) + rNum + */ ".tre";
 				File fastaFile = new File(fastaFileName);
-				File treeFile = new File(treeFileName);
+				//File treeFile = new File(treeFileName);
 				int count = 0;
 				while (fastaFile.exists()) {
 					count++;
 					fastaFileName = fastaFileStem + "_" + count + ".fas";
 					fastaFile = new File(fastaFileName);
 					treeFileName =  fastaFileStem + "_" + count + ".tre";
-					treeFile = new File(treeFileName);
+					//treeFile = new File(treeFileName);
 				}
 				
 				try {
 					fastaStream = new SerializablePrintStream(fastaFile);
 					
 					if (writeTreesWithFasta) {
-						
-						FileWriter treeWriter = new FileWriter(treeFile);
-						String newick = tree.getNewick();
-						treeWriter.write(newick + "\n");
-						treeWriter.close();
+						BufferedWriter buf = new BufferedWriter(new FileWriter(treeFileName));
+						treeWriter.writeTree(tree, buf);
+						buf.close();
 					}
 				}
 				catch (IOException ioe) {

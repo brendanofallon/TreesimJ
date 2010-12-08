@@ -63,10 +63,9 @@ public class SimpleTreeSampler extends TreeSampler {
 	public void collect(Collectible pop) {
 		calls++;
 		lastTree = null;
-
 		
-		Locus root = pop.getSampleTree(sampleSize);
-		DiscreteGenTree tree = new DiscreteGenTree(root);
+		DiscreteGenTree tree = pop.getSampleTree(sampleSize);
+		//DiscreteGenTree tree = new DiscreteGenTree(root);
 		lastTree = tree;
 		ArrayList<Double> nodeTimes = tree.getNodeTimes();
 

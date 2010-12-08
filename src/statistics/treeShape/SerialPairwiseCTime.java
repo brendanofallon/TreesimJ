@@ -4,6 +4,7 @@ import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.List;
 
 import population.Locus;
 
@@ -55,7 +56,7 @@ public class SerialPairwiseCTime extends TreeStatistic {
 			return;
 		double count = 0;
 		
-		ArrayList<Locus> tips = tree.getTips();
+		List<Locus> tips = tree.getTips();
 		ArrayList<Integer> tipTimes = new ArrayList<Integer>();
 		int treeHeight = tree.getMaxHeight();
 		for(int i=0; i<tips.size(); i++) {

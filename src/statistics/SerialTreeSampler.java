@@ -198,7 +198,7 @@ public class SerialTreeSampler extends TreeSampler {
 			tail.removeOffspring(root);
 		}
 		
-		lastTree = new DiscreteGenTree(root);
+		lastTree = new DiscreteGenTree(root, (List<Locus>)tips.clone());
 	}
 	
 	public DiscreteGenTree getLastTree() {
@@ -210,7 +210,7 @@ public class SerialTreeSampler extends TreeSampler {
 	 */
 	private void addDepthLabelsToTree() {
 		int height = lastTree.getMaxHeight();
-		ArrayList<Locus> tips = lastTree.getTips();
+		List<Locus> tips = lastTree.getTips();
 		
 		for(Locus tip : tips) {
 			int dist = tip.distToRoot();

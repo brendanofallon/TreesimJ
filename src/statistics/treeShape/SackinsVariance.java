@@ -1,6 +1,7 @@
 package statistics.treeShape;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import population.Locus;
 
@@ -27,7 +28,7 @@ public class SackinsVariance extends TreeStatistic {
 		if (tree==null)
 			return;
 		
-		ArrayList<Locus> tips = tree.getTips();
+		List<Locus> tips = tree.getTips();
 
 
 		ArrayList<Double> vals = new ArrayList<Double>();

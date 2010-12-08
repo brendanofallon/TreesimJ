@@ -17,7 +17,7 @@ import fitnessProviders.FitnessProvider;
  * @author brendan
  *
  */
-public class Locus implements Serializable {
+public class Locus implements Serializable, Comparable {
 
 	protected FitnessProvider fitnessData; //Describes fitness
 	protected double relativeFitness; 	//Fitness relative to population average in this generation - set & used by Population
@@ -470,6 +470,11 @@ public class Locus implements Serializable {
 	 */
 	public int getBreakPoint() {
 		return breakPointMin > 0 ? breakPointMin : (breakPointMax-1);
+	}
+
+	
+	public int compareTo(Object ind) {
+		return (int) (getID() - ((Locus) ind).getID());
 	}
 	
 }

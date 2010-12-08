@@ -147,6 +147,12 @@ public class TreesimJView extends JFrame implements DoneListener, ProgressListen
      */
     public void askAboutLastRunSettings() {
         String lastRunSettingsPath = props.getProperty("last.run.settings");
+        
+        //If its not in properties, then try the default
+        if (lastRunSettingsPath == null) {
+        	lastRunSettingsPath = settingsFromLastRun;
+        }
+        
         if (lastRunSettingsPath!=null) {
         	String[] ops = {"Reload settings", "Don't load" };
         	int choice = JOptionPane.showOptionDialog(this, "Reload settings from last run?", "Reload settings", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, ops, ops[0]);
@@ -784,7 +790,7 @@ public class TreesimJView extends JFrame implements DoneListener, ProgressListen
     		props.setProperty("props.path", propsPath);
     	}
     	
-    	String propsFullPath = propsPath; // + fileSep + propsFilename;
+    	String propsFullPath = propsPath; 
     	
     	try {
     		FileOutputStream propsStream = new FileOutputStream(propsFullPath);

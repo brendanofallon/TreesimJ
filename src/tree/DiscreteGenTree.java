@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Stack;
 
 import population.Locus;
+import treesimj.TJRunTimeException;
 
 
 /** 
@@ -23,9 +24,11 @@ import population.Locus;
 public class DiscreteGenTree {
 
 	private Locus root = null;
+	private List<Locus> tips = new ArrayList<Locus>();
 	
-	public DiscreteGenTree(Locus root) {
+	public DiscreteGenTree(Locus root,List<Locus> tips) {
 		this.root = root;
+		this.tips.addAll(tips);
 	}
 	
 	/**
@@ -71,6 +74,72 @@ public class DiscreteGenTree {
 		return str.toString();
 	}
 	
+	
+	
+	/**
+	 * Collects the positions of all breakpoints ancestral to the sample of individuals 
+	 * @param sample
+	 * @return A list of integers that specify the locations of recombinations ancestral to the sample
+	 */
+	public static List<Integer> collectBreakPoints(List<Locus> sample) {
+		int depth = 0;
+
+		List<Integer> breakpoints = new ArrayList<Integer>();
+		while(sample.size()>1) {
+			//System.out.println("Ancestors at depth " + depth + " : " + sample.size());
+			depth++;
+			List<Locus> parents = new ArrayList<Locus>();
+			
+			for(int i=0; i<sample.size(); i++) {
+				if (sample.get(i)==null)  {
+					System.err.println("Found a null individual in the sample. wha?");
+					throw new RuntimeException("Found null individual in sample");
+				}
+				
+				if (sample.get(i).getParent()==null) {
+					System.err.println("Found an individual in sample that has no parent: " + sample.get(i).getID() + " depth: " + depth + " sample size: " + sample.size());
+					throw new RuntimeException("Found individual with no parent");
+				}
+				if (! parents.contains(sample.get(i).getParent()))
+					parents.add(sample.get(i).getParent());
+				
+				if (sample.get(i).hasRecombination()) {
+					if (sample.get(i) != sample.get(i).getRecombinationPartner().getRecombinationPartner() ) {
+						System.err.println("Uh-oh, this ind's recombination partner's recombination partner is not this ind.");
+						throw new RuntimeException("Found inconsistent recombination partnership");
+					}
+					
+					Locus recombParent = sample.get(i).getRecombinationPartner().getParent(); 
+					if (recombParent == null) {
+						System.err.println("Parent of individual " + sample.get(i).getRecombinationPartner().getID() + " is null (ind is partner of " + sample.get(i).getID() + ")" );
+						System.err.println("Individual's pop : " + sample.get(i).getPop());
+						throw new RuntimeException("Found recombination partner with null parent");
+					}
+					if (! parents.contains( recombParent ))
+						parents.add( recombParent );
+					breakpoints.add(sample.get(i).getBreakPoint());
+				}
+			}
+			
+			System.out.print("Depth: " + depth + " sample size: " +sample.size() + "\t");
+			for(Locus loc : sample) {
+				System.out.print(loc.getID() + "\t");
+			}
+			System.out.println();
+			
+			sample = parents;
+			depth++;
+		}
+		
+		Collections.sort(breakpoints);
+		System.out.print("Max depth: " + depth + " Sample BPs : ");
+		for(int i=0; i<breakpoints.size(); i++) {
+			System.out.print(breakpoints.get(i) + ", ");
+		}
+		System.out.println();
+		return breakpoints;
+	}
+	
 	public void printTree() {
 		if (root==null) {
 			System.out.println("Tree has no root.");
@@ -90,7 +159,7 @@ public class DiscreteGenTree {
 	 * @return
 	 */
 	public int getMaxHeight() {
-		ArrayList<Locus> tips = this.getTips();
+		List<Locus> tips = this.getTips();
 		int maxHeight = 0;
 		int i;
 		for(i=0; i<tips.size(); i++)
@@ -304,8 +373,9 @@ public class DiscreteGenTree {
 	 * Returns an array list of all the tips of the tree
 	 * @return
 	 */
-	public ArrayList<Locus> getTips() {
-		return getTips(root);
+	public List<Locus> getTips() {
+		return tips;
+		//return getTips(root);
 	}
 	
 	/**
@@ -313,15 +383,19 @@ public class DiscreteGenTree {
 	 * @return
 	 */
 	private static ArrayList<Locus> getTips(Locus n) {
-		Stack<Locus> nodes = new Stack<Locus>();
-		nodes.add(n);
+		Stack<Locus> stack = new Stack<Locus>();
+		stack.add(n);
 		ArrayList<Locus> tips = new ArrayList<Locus>();
 
-		while(nodes.size()>0) {
-			Locus ind = nodes.pop();
+		while(stack.size()>0) {
+			Locus ind = stack.pop();
 			if (ind.numOffspring()==0)
 				tips.add( ind );
-			nodes.addAll( ind.getOffspring());
+			else {
+				if (ind.hasRecombination())
+					stack.add(ind.getRecombinationPartner());
+				stack.addAll( ind.getOffspring());
+			}
 		}
 		
 		return tips;

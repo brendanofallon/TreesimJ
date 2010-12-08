@@ -1,6 +1,7 @@
 package statistics.treeShape;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import population.Locus;
 
@@ -29,7 +30,7 @@ public class SackinsIndex extends TreeStatistic {
 			return;
 
 		Locus root = tree.getRoot();
-		ArrayList<Locus> tips = tree.getTips();
+		List<Locus> tips = tree.getTips();
 
 		double sum = 0;
 		for(Locus tip : tips) {

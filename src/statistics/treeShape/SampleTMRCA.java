@@ -1,6 +1,7 @@
 package statistics.treeShape;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import population.Locus;
 
@@ -26,7 +27,7 @@ public class SampleTMRCA extends statistics.TreeStatistic {
 	public void collect(DiscreteGenTree tree) {
 		if (tree==null)
 			return;
-		ArrayList<Locus> tips = tree.getTips();
+		List<Locus> tips = tree.getTips();
 		Double max = 0.0;
 		for(Locus tip : tips) {
 			int dist = tip.distToRoot();
