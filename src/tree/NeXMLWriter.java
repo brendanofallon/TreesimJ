@@ -14,8 +14,9 @@ public class NeXMLWriter implements TreeWriter {
 			throws IOException {
 		
 		List<Locus> tips = tree.getTips();
-		List<Integer> breakpoints = DiscreteGenTree.collectBreakPoints(tips);
-		
+		List<Integer> breakpoints = tree.collectBreakPoints();
+		if (breakpoints.size()>0)
+			System.out.println("NeXML found breakpoints : " + breakpoints);
 		
 	}
 

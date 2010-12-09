@@ -261,75 +261,7 @@ public class Population implements Serializable, Collectible {
 	
 
 	
-	/**
-	 * Creates a list containing newly created individuals who are the parents of the 'kids', without repetition (no duplicate parents),
-	 * and copying the parent-offspring relations of the kids and their real parents. The new parental generation
-	 * is attached to the sampleKid generation via parent-offspring references
-	 * @param kids
-	 */
-	private void createSampleParents(ArrayList<Locus> actualKids, ArrayList<Locus> sampleKids) {
-		ArrayList<Locus> parents = new ArrayList<Locus>(); //The actual parents of the kids (in the persistent pop)
-		ArrayList<Locus> sampleParents = new ArrayList<Locus>(); //The sampled (copied) parents
-		
-		for(Locus kid : actualKids) {
-			Locus actualPartner = kid.getRecombinationPartner();
-			Locus samplePartner = null;
-			//
-			if (actualPartner != null && (!actualKids.contains(actualPartner))) {
-				samplePartner = actualPartner.getDataCopy();
-				samplePartner.setID( actualPartner.getID());
-				Locus samplePartnerParent = actualPartner.getParent().getDataCopy();
-				Locus actualPartnerParent = actualPartner.getParent();
-				
-				samplePartnerParent.setID( actualPartnerParent.getID());
-				
-				samplePartnerParent.addOffspring(samplePartner);
-				samplePartner.setParent(samplePartnerParent);
-				
-				if ( ! parents.contains(actualPartnerParent) ) {
-					parents.add( actualPartnerParent);
-					if (sampleParents.contains(samplePartnerParent)) {
-						System.err.println("Hmm, actual parents didn't contain the recomb. partner parent, but sampleParents already contains it. This is probably an error");
-					}
-					else {
-						sampleParents.add(samplePartnerParent);
-					}
-				}
-				
-			}
-			
-			
-			if ( findIndByID(parents, kid.getParent().getID())!=null ) {	//The parent of kid is already in the list of parents, all we have to do is update references  
-				Locus sampleParent = findIndByID(sampleParents, kid.getParent().getID());
-				Locus sampleKid = findIndByID(sampleKids, kid.getID());
-				if (sampleKid==null) 
-					System.err.println("2: Uh-oh, could not find sampleKid with id=" + kid.getID()  );
-				sampleParent.addOffspring( sampleKid );
-				sampleKid.setParent( sampleParent);
-			}
-			else {	//The parent of kid is not in the list of sampled parents, so we must create a copy of the parent and add it to sampleParents
-				parents.add( kid.getParent() );
-				Locus sampleParent = kid.getParent().getDataCopy();
-				sampleParent.setID( kid.getParent().getID() );
-				
-				Locus sampleKid = findIndByID(sampleKids, kid.getID());
-				if (sampleKid==null) 
-					System.err.println("1: Uh-oh, could not find sampleKid with id=" + kid.getID()  );
-				sampleParent.addOffspring(sampleKid);
-				sampleKid.setParent( sampleParent );
-				
-				sampleParents.add( sampleParent );
-			}
-		
-			
-		}
-		
 
-		sampleKids.clear();
-		sampleKids.addAll(sampleParents);
-		actualKids.clear();
-		actualKids.addAll(parents);
-	}
 	
 	/**
 	 * Whether or not the DNA state of all ancestral individuals (those not in the current gen) should be preserved. Setting
@@ -412,46 +344,7 @@ public class Population implements Serializable, Collectible {
 		return null;
 	}
 	
-	/**
-	 * Creates a list containing newly created individuals who are the parents of the 'kids', without repetition (no duplicate parents),
-	 * and copying the parent-offspring relations of the kids and their real parents. The new parental generation
-	 * is attached to the sampleKid generation via parent-offspring references
-	 * @param kids
-	 */
-	public static void createSampleParents(List<Locus> actualKids, List<Locus> sampleKids) {
-		List<Locus> parents = new ArrayList<Locus>(); //The actual parents of the kids (in the persistent pop)
-		List<Locus> sampleParents = new ArrayList<Locus>(); //The sampled (copied) parents
-		
-		for(Locus kid : actualKids) {
-			if ( findIndByID(parents, kid.getParent().getID())!=null ) {	//The parent of kid is already in the list of parents, all we have to do is update references  
-				Locus sampleParent = findIndByID(sampleParents, kid.getParent().getID());
-				Locus sampleKid = findIndByID(sampleKids, kid.getID());
-				if (sampleKid==null) 
-					System.err.println("2: Uh-oh, could not find sampleKid with id=" + kid.getID()  );
-				sampleParent.addOffspring( sampleKid );
-				sampleKid.setParent( sampleParent);
-			}
-			else {	//The parent of kid is not in the list of sampled parents, so we must create a copy of the parent and add it to sampleParents
-				parents.add( kid.getParent() );
-				Locus sampleParent = kid.getParent().getDataCopy();
-				sampleParent.setID( kid.getParent().getID() );
-				
-				Locus sampleKid = findIndByID(sampleKids, kid.getID());
-				if (sampleKid==null) 
-					System.err.println("1: Uh-oh, could not find sampleKid with id=" + kid.getID()  );
-				sampleParent.addOffspring(sampleKid);
-				sampleKid.setParent( sampleParent );
-				
-				sampleParents.add( sampleParent );
-			}
-		}
-		
 
-		sampleKids.clear();
-		sampleKids.addAll(sampleParents);
-		actualKids.clear();
-		actualKids.addAll(parents);
-	}
 	
 
 	/**
@@ -510,6 +403,90 @@ public class Population implements Serializable, Collectible {
 	}
 	
 	/**
+	 * This important method is called repeatedly by getSampleTree to create a cloned genealogy, with each call creating 
+	 * one new 'generation' of the genealogy, in backward time, using the relationships and data in actualKids as the 
+	 * structure to clone.  
+	 * ActualKids are assumed to represent Loci in a 'real' Population, and thus they have parents with all appropriate
+	 * references intact. sampleKids represents the growing sample, this method examines the parents and recombination partners
+	 * of the actualKids, and creates parents and recombination partners for the sampleKids with identical data, ID's, and 
+	 * structure. After doing this, everyone in sampleKids is replaced by the sample parents, and everyone in actualKids is 
+	 * replaced by their parents, so repeated calls to this method continually add new generations to the growing sample. 
+	 * Typical usage involves calling this repeatedly until actualKids and sampleKids contain one locus, which represents the
+	 * MRCA of the sample.  
+	 * @param actualKids
+	 * @param sampleKids
+	 */
+	public static void createSampleParents(List<Locus> actualKids, List<Locus> sampleKids) {
+		ArrayList<Locus> parents = new ArrayList<Locus>(); 			//The actual parents of the kids (in the persistent pop)
+		ArrayList<Locus> sampleParents = new ArrayList<Locus>();    //The sampled (copied) parents
+		
+		if (actualKids.size() != sampleKids.size()) {
+			throw new RuntimeException("ActualKids and sampleKids are not the same size.");
+		}
+		
+		//Iterate over all actual kids, examining who their parents are, and constructing the exact same
+		//relationship among the sampleKids 
+		for(Locus actualKid : actualKids) {
+			Locus actualParent = actualKid.getParent();
+			Locus sampleKid = findIndByID(sampleKids, actualKid.getID());
+			Locus sampleParent = findIndByID(sampleParents, actualParent.getID());
+			
+			if (! parents.contains(actualParent)) {
+				//If parents already contains actualParent, then sampleParents should contain an ind with that ID as well...
+				if ( sampleParent != null) {
+					throw new RuntimeException("createSampleParents is not working, sampleParents and actualParents do not match");
+				}
+				sampleParent = actualParent.getDataCopy();
+				sampleParent.setID( actualParent.getID());
+				sampleParents.add(sampleParent);
+				parents.add(actualParent);
+			}
+			
+			sampleParent.addOffspring(sampleKid);
+			sampleKid.setParent(sampleParent);
+			
+			//If the kid has a recombination, then find its partner, and create a new locus that is the corresponding sample partner.
+			//Also, see if its partner's parent is already in the parents list. If so, just find it. If not, create a second
+			//new sample locus that represents the partner's parent, and add the actual partner parent and sample partner parent
+			//to their respective parent lists. 
+			if (actualKid.hasRecombination()) {
+				Locus actualPartner = actualKid.getRecombinationPartner();
+				Locus samplePartner = actualPartner.getDataCopy();
+				samplePartner.setID( actualPartner.getID());
+				sampleKid.setRecombinationPartner(actualKid.getBreakPointMin(), actualKid.getBreakPointMax(), samplePartner);
+				samplePartner.setRecombinationPartner(actualKid.getBreakPointMin(), actualKid.getBreakPointMax(), sampleKid);
+				
+				Locus actualPartnerParent = findIndByID(parents, actualPartner.getParent().getID());
+				Locus samplePartnerParent = findIndByID(sampleParents, actualPartner.getParent().getID());
+				
+				//Error checking
+				if ((actualPartnerParent == null && samplePartnerParent != null) || (actualPartnerParent != null && samplePartnerParent == null)) {
+					throw new RuntimeException("Sample / actual parent lists invalid");
+				}
+				
+				//If partner's parent not already in list of parents, then we must create a new parent for the sample partner,
+				//and add both the actual partner parent and sample partner parent to the list of parents
+				if ( actualPartnerParent==null) {
+					actualPartnerParent = actualPartner.getParent();
+					samplePartnerParent = actualPartnerParent.getDataCopy();
+					samplePartnerParent.setID( actualPartnerParent.getID());
+					sampleParents.add(samplePartnerParent);
+					parents.add(actualPartnerParent);
+				}
+				
+				//Always connect the sample partner to its parent
+				samplePartnerParent.addOffspring(samplePartner);
+				samplePartner.setParent(samplePartnerParent);
+			}
+		}
+		
+		actualKids.clear();
+		actualKids.addAll(parents);
+		sampleKids.clear();
+		sampleKids.addAll(sampleParents);
+	}
+	
+	/**
 	 * Construct the genealogy of the given sample of individuals. All individuals in actualKids are cloned to produce the genealogy 
 	 * so they are not actually members of the newly created tree (although they will have the same ID & data as those individuals 
 	 * in the tips of the tree). 
@@ -537,16 +514,16 @@ public class Population implements Serializable, Collectible {
 			iteration++;
 			//System.out.println("Iteration : " + iteration + " actual kids: " + actualKids.size() + " sample kids : " + sampleKids.size());
 			
-			System.out.print("Depth: " + iteration + " : \n");
-			for(Locus sampKid : sampleKids)
-				System.out.print(sampKid.getID() + "\t");
-			System.out.println();
-			for(Locus actKid : actualKids)
-				System.out.print(actKid.getID() + "\t");
-			System.out.println();
+//			System.out.print("Depth: " + iteration + " : ");
+//			for(Locus sampKid : sampleKids)
+//				System.out.print(sampKid.getID() + "\t");
+//			System.out.println();
 			
 			createSampleParents(actualKids, sampleKids);
 			
+			if (actualKids.size() != sampleKids.size() ) {
+				throw new RuntimeException("Yikes! actual kids and samplekids do not have same size in sample tree creation!");
+			}
 
 			if (actualKids.size()>1) {
 				for(Locus actualKid : actualKids) {
@@ -713,7 +690,7 @@ public class Population implements Serializable, Collectible {
 //			 }
 //		 }
 		 
-		 recombine(0.001);
+		 recombine(0.005);
 		 calls++;
 	}
 	

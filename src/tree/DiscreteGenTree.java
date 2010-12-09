@@ -77,19 +77,23 @@ public class DiscreteGenTree {
 	
 	
 	/**
-	 * Collects the positions of all breakpoints ancestral to the sample of individuals 
+	 * Collects the positions of all breakpoints ancestral to the sample of individuals. This is a good
+	 * example of the upwards-traversal method required for recombinant trees.  
 	 * @param sample
 	 * @return A list of integers that specify the locations of recombinations ancestral to the sample
 	 */
-	public static List<Integer> collectBreakPoints(List<Locus> sample) {
+	public List<Integer> collectBreakPoints() {
 		int depth = 0;
 
+		List<Locus> sample = new ArrayList<Locus>();
+		sample.addAll(tips);
+		
 		List<Integer> breakpoints = new ArrayList<Integer>();
 		while(sample.size()>1) {
 			//System.out.println("Ancestors at depth " + depth + " : " + sample.size());
-			depth++;
-			List<Locus> parents = new ArrayList<Locus>();
 			
+			List<Locus> parents = new ArrayList<Locus>();
+
 			for(int i=0; i<sample.size(); i++) {
 				if (sample.get(i)==null)  {
 					System.err.println("Found a null individual in the sample. wha?");
@@ -100,43 +104,47 @@ public class DiscreteGenTree {
 					System.err.println("Found an individual in sample that has no parent: " + sample.get(i).getID() + " depth: " + depth + " sample size: " + sample.size());
 					throw new RuntimeException("Found individual with no parent");
 				}
-				if (! parents.contains(sample.get(i).getParent()))
+				if (! parents.contains(sample.get(i).getParent())) {
 					parents.add(sample.get(i).getParent());
+				}
 				
 				if (sample.get(i).hasRecombination()) {
+					//An error check
 					if (sample.get(i) != sample.get(i).getRecombinationPartner().getRecombinationPartner() ) {
 						System.err.println("Uh-oh, this ind's recombination partner's recombination partner is not this ind.");
 						throw new RuntimeException("Found inconsistent recombination partnership");
 					}
 					
 					Locus recombParent = sample.get(i).getRecombinationPartner().getParent(); 
+
 					if (recombParent == null) {
 						System.err.println("Parent of individual " + sample.get(i).getRecombinationPartner().getID() + " is null (ind is partner of " + sample.get(i).getID() + ")" );
 						System.err.println("Individual's pop : " + sample.get(i).getPop());
 						throw new RuntimeException("Found recombination partner with null parent");
 					}
-					if (! parents.contains( recombParent ))
+
+					
+					if (! parents.contains( recombParent )) {
 						parents.add( recombParent );
+					}
+					
+				//	System.out.println("Found sample with recombination, bp is: " + sample.get(i).getBreakPoint());
 					breakpoints.add(sample.get(i).getBreakPoint());
 				}
 			}
-			
-			System.out.print("Depth: " + depth + " sample size: " +sample.size() + "\t");
-			for(Locus loc : sample) {
-				System.out.print(loc.getID() + "\t");
-			}
-			System.out.println();
 			
 			sample = parents;
 			depth++;
 		}
 		
+		
 		Collections.sort(breakpoints);
-		System.out.print("Max depth: " + depth + " Sample BPs : ");
-		for(int i=0; i<breakpoints.size(); i++) {
-			System.out.print(breakpoints.get(i) + ", ");
-		}
-		System.out.println();
+//		System.out.print("Max depth: " + depth + " Sample BPs : ");
+//		for(int i=0; i<breakpoints.size(); i++) {
+//			System.out.print(breakpoints.get(i) + ", ");
+//		}
+//		System.out.println();
+		
 		return breakpoints;
 	}
 	
@@ -529,12 +537,14 @@ public class DiscreteGenTree {
 	 * @return
 	 */
 	private static int subTreeSize(Locus n) {
-		int count = 1;
-		int i;
-		for(i=0; i<n.numOffspring(); i++)
-			count += subTreeSize(n.getOffspring(i));
-		
-		return count;
+		throw new RuntimeException("SubTreeSize has not been implemented for ARGS...");
+//		int count = 1;
+//		int i;
+//		for(i=0; i<n.numOffspring(); i++)
+//			count += subTreeSize(n.getOffspring(i));
+//		if (n.hasRecombination())
+//			count += subTreeSize(n.getRecombinationPartner());
+//		return count;
 	}
 	
 	
