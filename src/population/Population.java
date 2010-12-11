@@ -690,7 +690,7 @@ public class Population implements Serializable, Collectible {
 //			 }
 //		 }
 		 
-		 recombine(0.005);
+		 //recombine(0.0);
 		 calls++;
 	}
 	
