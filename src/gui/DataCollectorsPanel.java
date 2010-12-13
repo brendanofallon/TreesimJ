@@ -45,7 +45,6 @@ import statistics.dna.WattersonsTheta;
 import statistics.fitness.AbsoluteFitnessDistro;
 import statistics.fitness.MeanFitness;
 import statistics.fitness.MeanLineageFitness;
-import statistics.fitness.RelativeFitnessDistro;
 import statistics.fitness.StdevFitness;
 import statistics.fitness.Tau;
 import statistics.treeShape.CoalIntervalStat;
@@ -178,7 +177,7 @@ public class DataCollectorsPanel extends JPanel implements XMLConfigurable {
 		addSeparator("Fitness statistics");
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(MeanFitness.identifier), darkColor);
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(StdevFitness.identifier), lightColor);
-		addSingleDataCollectorItem((Statistic)sReg.getInstance(RelativeFitnessDistro.identifier), darkColor);
+		//addSingleDataCollectorItem((Statistic)sReg.getInstance(RelativeFitnessDistro.identifier), darkColor);
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(AbsoluteFitnessDistro.identifier), lightColor);
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(Tau.identifier), darkColor);
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(MeanLineageFitness.identifier), lightColor);
