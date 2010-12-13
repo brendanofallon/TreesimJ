@@ -18,7 +18,6 @@ import statistics.dna.WattersonsTheta;
 import statistics.fitness.AbsoluteFitnessDistro;
 import statistics.fitness.MeanFitness;
 import statistics.fitness.MeanLineageFitness;
-import statistics.fitness.RelativeFitnessDistro;
 import statistics.fitness.StdevFitness;
 import statistics.fitness.Tau;
 import statistics.treeShape.CladeSizeDistro;
@@ -54,7 +53,7 @@ public class StatisticRegistry {
 		add(new MutNumDistro());
 		add(new NucDiversity());
 		add(new PairwiseCTime());
-		add(new RelativeFitnessDistro());
+		//add(new RelativeFitnessDistro());
 		add(new SackinsIndex());
 		add(new SackinsVariance());
 		add(new SegregatingSites());

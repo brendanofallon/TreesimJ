@@ -683,14 +683,14 @@ public class Population implements Serializable, Collectible {
 		 if (autoShortenRoot)
 			 shortenRoot();
 		 
-//		 if (calls % 100 == 0) {
-//			 for(Individual ind : pop) {
-//				 DNASequence master = ((DNAFitness) ind.getFitnessData()).getMaster();
-//				 ((DNAFitness)ind.getFitnessData()).verifyFitness(master);
-//			 }
-//		 }
+		 if (calls % 100 == 0) {
+			 for(Locus ind : pop) {
+				 DNASequence master = ((DNAFitness) ind.getFitnessData()).getMaster();
+				 ((DNAFitness)ind.getFitnessData()).verifyFitness(master);
+			 }
+		 }
 		 
-		 //recombine(0.0);
+		 recombine(0.005);
 		 calls++;
 	}
 	

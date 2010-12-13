@@ -106,12 +106,14 @@ public class GraphDecomposer {
 				}
 				
 				if (targetLocus.hasRecombination()) {
-					//TODO not complete! May be very wrong!
 					Locus recombLocus = targetLocus.getRecombinationPartner();
-					GraphNode recombGraphNode = new GraphNode(target.height, recombLocus.getID());
-					BranchBundle recomBundle = getBranchNodePair(recombLocus, recombGraphNode);
-					//Need some way of specifying range information!
-					stack.push(recomBundle);
+					if ( getNodeForID(nodes, recombLocus.getID())==null) {
+						GraphNode recombGraphNode = new GraphNode(target.height, recombLocus.getID());
+						BranchBundle recomBundle = getBranchNodePair(recombLocus, recombGraphNode);
+						//Need some way of specifying range information!
+						stack.push(recomBundle);
+						System.out.println("Adding recombinant branch to stack...");
+					}
 				}
 			}
 			

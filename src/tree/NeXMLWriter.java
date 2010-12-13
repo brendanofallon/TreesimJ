@@ -36,18 +36,29 @@ public class NeXMLWriter implements TreeWriter {
 		List<Branch> edges = graphDecomp.getEdges();
 			
 		writer.write("<" + XML_SECTION + ">\n");
+		System.out.println("<" + XML_SECTION + ">");
 	
 		for(GraphNode node : nodes) {
 			writer.write("\t <" + XML_NODE + " id=\"" + node.id + "\" height=\"" + node.height + "\"/>\n");
+			System.out.println("\t <" + XML_NODE + " id=\"" + node.id + "\" height=\"" + node.height + "\"/>");
 		}
 		
 		int edgeCount = 1;
 		for(Branch edge : edges) {
 			writer.write("\t <" + XML_EDGE + " id=\"branch" + edgeCount + "\" source=\"" + edge.source.id + "\" target=\"" + edge.target.id + "\"/>\n");
+			System.out.println("\t <" + XML_EDGE + " id=\"branch" + edgeCount + "\" source=\"" + edge.source.id + "\" target=\"" + edge.target.id + "\"/>");
 			edgeCount++;
 		}
 		
 		writer.write("</" + XML_SECTION + ">\n");
+		System.out.println("</" + XML_SECTION + ">");
+		
+		try {
+			System.in.read();
+		}
+		catch(IOException ex) {
+			
+		}
 	}
 	
 
