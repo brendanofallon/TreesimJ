@@ -23,6 +23,11 @@ public class NeXMLWriter implements TreeWriter {
 	public static final String XML_EDGE = "edge";
 	public static final String XML_SECTION = "graph";
 	public static final String XML_HEADER = "graphml";
+	public static final String XML_RANGE = "range";
+	public static final String XML_START = "start";
+	public static final String XML_END = "end";
+	public static final String XML_RANGEMIN = "rangemin";
+	public static final String XML_RANGEMAX = "rangemax";
 	
 	@Override
 	public void writeTree(DiscreteGenTree tree, BufferedWriter writer)
@@ -31,34 +36,53 @@ public class NeXMLWriter implements TreeWriter {
 
 		GraphDecomposer graphDecomp = new GraphDecomposer();
 		graphDecomp.parseGraph(tree);
+		Locus tip = tree.getTips().get(0);
+		int seqLength = tip.getRecombineableData().length();
 		
-		List<GraphNode> nodes = graphDecomp.getNodes();
-		List<Branch> edges = graphDecomp.getEdges();
-			
-		writer.write("<" + XML_SECTION + ">\n");
-		System.out.println("<" + XML_SECTION + ">");
-	
-		for(GraphNode node : nodes) {
-			writer.write("\t <" + XML_NODE + " id=\"" + node.id + "\" height=\"" + node.height + "\"/>\n");
-			System.out.println("\t <" + XML_NODE + " id=\"" + node.id + "\" height=\"" + node.height + "\"/>");
-		}
+		String str = getString(graphDecomp, seqLength);
+		writer.write(str);
 		
-		int edgeCount = 1;
-		for(Branch edge : edges) {
-			writer.write("\t <" + XML_EDGE + " id=\"branch" + edgeCount + "\" source=\"" + edge.source.id + "\" target=\"" + edge.target.id + "\"/>\n");
-			System.out.println("\t <" + XML_EDGE + " id=\"branch" + edgeCount + "\" source=\"" + edge.source.id + "\" target=\"" + edge.target.id + "\"/>");
-			edgeCount++;
-		}
-		
-		writer.write("</" + XML_SECTION + ">\n");
-		System.out.println("</" + XML_SECTION + ">");
-		
+		System.out.println(str);
 		try {
 			System.in.read();
 		}
 		catch(IOException ex) {
 			
 		}
+	}
+	
+	private String getString(GraphDecomposer decomp, int length) {
+		List<GraphNode> nodes = decomp.getNodes();
+		List<Branch> edges = decomp.getEdges();
+		StringBuffer strBuf = new StringBuffer();
+				
+		strBuf.append("<" + XML_SECTION + "  " + XML_RANGEMIN + "=\"" + 0 + "\"  " + XML_RANGEMAX + "=\"" + length + "\">\n");
+		//System.out.println("<" + XML_SECTION + ">");
+	
+		for(GraphNode node : nodes) {
+			strBuf.append("\t <" + XML_NODE + " id=\"" + node.id + "\" height=\"" + node.height + "\"/>\n");
+			//System.out.println("\t <" + XML_NODE + " id=\"" + node.id + "\" height=\"" + node.height + "\"/>");
+		}
+		
+		int edgeCount = 1;
+		for(Branch edge : edges) {
+			if (edge.hasRange()) {
+				strBuf.append("\t <" + XML_EDGE + " id=\"branch" + edgeCount + "\" source=\"" + edge.source.id + "\" target=\"" + edge.target.id + "\" >\n");
+				strBuf.append("\t \t <" + XML_RANGE + ">\n");
+				strBuf.append("\t \t \t <" + XML_START + "> " + edge.rangeMin + " </" + XML_START + ">\n");
+				strBuf.append("\t \t \t <" + XML_END + "> " + edge.rangeMax + " </" + XML_END + ">\n");
+				strBuf.append("\t \t </" + XML_RANGE + ">\n");
+				strBuf.append("\t </edge>\n");
+
+			}
+			else {
+				strBuf.append("\t <" + XML_EDGE + " id=\"branch" + edgeCount + "\" source=\"" + edge.source.id + "\" target=\"" + edge.target.id + "\"/>\n");
+			}
+			edgeCount++;
+		}
+		
+		strBuf.append("</" + XML_SECTION + ">\n");
+		return strBuf.toString();
 	}
 	
 

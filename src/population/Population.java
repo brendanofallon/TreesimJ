@@ -454,7 +454,7 @@ public class Population implements Serializable, Collectible {
 				Locus samplePartner = actualPartner.getDataCopy();
 				samplePartner.setID( actualPartner.getID());
 				sampleKid.setRecombinationPartner(actualKid.getBreakPointMin(), actualKid.getBreakPointMax(), samplePartner);
-				samplePartner.setRecombinationPartner(actualKid.getBreakPointMin(), actualKid.getBreakPointMax(), sampleKid);
+				samplePartner.setRecombinationPartner(actualPartner.getBreakPointMin(), actualPartner.getBreakPointMax(), sampleKid);
 				
 				Locus actualPartnerParent = findIndByID(parents, actualPartner.getParent().getID());
 				Locus samplePartnerParent = findIndByID(sampleParents, actualPartner.getParent().getID());

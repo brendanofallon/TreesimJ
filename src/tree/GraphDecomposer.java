@@ -100,21 +100,39 @@ public class GraphDecomposer {
 			//If we've already added the target, then stop heading rootward
 			if (getNodeForID(nodes, targetLocus.getID())==null) {
 				nodes.add(target);
-				if (targetLocus.getParent()!=null && targetLocus.numOffspring()>1) {
-					BranchBundle newBundle = getBranchNodePair(targetLocus, target);
-					stack.push(newBundle);
-				}
 				
 				if (targetLocus.hasRecombination()) {
+					BranchBundle newBundle = getBranchNodePair(targetLocus, target, targetLocus.getBreakPointMin(), targetLocus.getBreakPointMax());
+					
 					Locus recombLocus = targetLocus.getRecombinationPartner();
-					if ( getNodeForID(nodes, recombLocus.getID())==null) {
-						GraphNode recombGraphNode = new GraphNode(target.height, recombLocus.getID());
-						BranchBundle recomBundle = getBranchNodePair(recombLocus, recombGraphNode);
-						//Need some way of specifying range information!
-						stack.push(recomBundle);
-						System.out.println("Adding recombinant branch to stack...");
+					//Confusing bit here.. the recombLocus's breakpoints are exactly the same as the original locus's breakpoints, as they should be.
+					//But when we want to create two branches that attach to one node and go in different directions, the branch that goes to the recomb
+					//locus's parent but attaches to the original child locus must have its breakpoints 'switched'
+					int newBPMin;
+					int newBPMax;
+					if (recombLocus.getBreakPointMin()==0) {
+						newBPMin = recombLocus.getBreakPointMax();
+						newBPMax = recombLocus.getRecombineableData().length();
+					}
+					else {
+						newBPMin = 0;
+						newBPMax = recombLocus.getBreakPointMin();
+					}
+					BranchBundle recomBundle = getBranchNodePair(recombLocus, target, newBPMin, newBPMax);
+					
+					stack.push(newBundle);
+					stack.push(recomBundle);
+					System.out.println("Adding recombinant branch to stack...");
+					
+				}
+				else {
+					//No recombination, only push a new branch if there's a coalescence here 
+					if (targetLocus.getParent()!=null && targetLocus.numOffspring()>1) {
+						BranchBundle newBundle = getBranchNodePair(targetLocus, target);
+						stack.push(newBundle);
 					}
 				}
+
 			}
 			
 
@@ -139,7 +157,7 @@ public class GraphDecomposer {
 	 * @param source GraphNode corresponding to source
 	 * @return
 	 */
-	private BranchBundle getBranchNodePair(Locus sourceLocus, GraphNode graphSource) {
+	private BranchBundle getBranchNodePair(Locus sourceLocus, GraphNode graphSource, int breakMin, int breakMax) {
 		 //Stores a branch and the rootward node it reaches
 		
 		double length = 1;
@@ -151,11 +169,20 @@ public class GraphDecomposer {
 		
 		ref.setLabel( ref.getReadableID());
 		GraphNode graphTarget = new GraphNode(graphSource.height+length, ref.getID());
-		Branch branch = new Branch(graphSource, graphTarget);
+		Branch branch;
+		if (breakMin>-1) {
+			branch = new Branch(graphSource, graphTarget, breakMin, breakMax);
+		}
+		else {
+			branch = new Branch(graphSource, graphTarget);
+		}
 	
 		return new BranchBundle(branch, graphTarget, ref);
 	}
 	
+	private BranchBundle getBranchNodePair(Locus sourceLocus, GraphNode graphSource) {
+		return getBranchNodePair(sourceLocus, graphSource, -1, -1);
+	}
 	
 	/**
 	 * Nothing more than a container for a branch, a target node, and the locus corresponding to
@@ -187,7 +214,20 @@ public class GraphDecomposer {
 		
 		GraphNode source;
 		GraphNode target;
-				
+		int rangeMin = -1;
+		int rangeMax = -1;
+		
+		public Branch(GraphNode source, GraphNode target, int rangeMin, int rangeMax) {
+			this(source,  target);
+			this.rangeMin = rangeMin;
+			this.rangeMax = rangeMax;
+		}
+		
+		public boolean hasRange() {
+			return rangeMax > -1;
+		}
+		
+		
 		public Branch(GraphNode source, GraphNode target) {
 			this.source = source;
 			this.target = target;
@@ -197,6 +237,8 @@ public class GraphDecomposer {
 			return "branch:\t source=" + source.id + "\t target=" + target.id;
 		}
 	}
+	
+	
 	
 	class GraphNode {
 		
