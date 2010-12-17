@@ -16,11 +16,15 @@ public abstract class MutationModel extends XMLParseable implements Serializable
 	
 	public abstract void setRandomEngine(RandomEngine rng);
 	
+	public abstract void setRecombinationRate(double recRate);
+	
 	public abstract void mutate(DNASequence seq);
 	
 	public abstract double mutateUpdateFitness(DNASequence seq, DNASequence master, SiteFitnesses siteModel);
 	
 	public abstract double getMu();
+	
+	public abstract double getRecombinationRate();
 	
 	public abstract String getDescription();
 	

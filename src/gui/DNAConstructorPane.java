@@ -35,7 +35,7 @@ import cern.jet.random.engine.RandomEngine;
 
 /**
  * A panel that contains various options for creation of DNA (including the DNA length and the mutation model). This
- * houses a list of various mutation models.
+ * also  houses a list of various mutation models.
  * @author brendan
  *
  */
@@ -48,6 +48,8 @@ public class DNAConstructorPane extends javax.swing.JPanel implements XMLConfigu
 	JComboBox mutationModelBox;
 	JTextField ttField;
 	JPanel muModelCardPanel;
+	
+	JTextField recRateField;
 	
 	ArrayList<MutationModelConfigurator> mutationModels;
 	String currentMuMod;
@@ -85,6 +87,19 @@ public class DNAConstructorPane extends javax.swing.JPanel implements XMLConfigu
 		muRatePanel.add(Box.createGlue());
 		
 		add(muRatePanel);
+		
+		
+		JPanel recRatePanel = new JPanel();
+		recRatePanel.setOpaque(false);
+		recRatePanel.setLayout(new FlowLayout((FlowLayout.LEFT)));
+		recRatePanel.add(new JLabel("Recombination rate:"));
+		recRateField = new JTextField("0.0");
+		recRateField.setPreferredSize(new Dimension(80, 24));
+		recRateField.setMinimumSize(new Dimension(80, 10));
+		recRateField.add(Box.createGlue());
+		recRatePanel.add(recRateField);
+		recRatePanel.setToolTipText("Per sequence, per generation rate of recombination");
+		add(recRatePanel);
 		
 		add(Box.createVerticalStrut(5));
 		
@@ -188,6 +203,17 @@ public class DNAConstructorPane extends javax.swing.JPanel implements XMLConfigu
 	}
 	
 	
+	public Double getRecombinationRate() {
+		try {
+			Double val = Double.parseDouble(recRateField.getText());
+			return val;
+		}
+		catch (NumberFormatException nfe) {
+			System.err.println("Couldn't parse a number from the recombination rate field");
+			return null;
+		}
+	}
+	
 	public MutationModel getMutationModel(RandomEngine rng) {
 		MutationModelConfigurator conf = getConfByID(currentMuMod);
 		Double mu = 1e-6;
@@ -244,6 +270,10 @@ public class DNAConstructorPane extends javax.swing.JPanel implements XMLConfigu
 
 	public void setMutationRate(Double mu) {
 		mutationRateField.setText(String.valueOf(mu));
+	}
+	
+	public void setRecombinationRate(Double r) {
+		recRateField.setText(String.valueOf(r));
 	}
 	
 	public String getXMLTypeAttr() {

@@ -119,4 +119,10 @@ public class TN93Mutation extends MutationMatrixModel {
 	public double getPiT() {
 		return piT;
 	}
+
+	@Override
+	public double getRecombinationRate() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

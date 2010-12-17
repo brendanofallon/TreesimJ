@@ -12,4 +12,6 @@ public interface TreeWriter {
 
 	public void writeTree(DiscreteGenTree tree, BufferedWriter writer) throws IOException;
 	
+	public String getSuffix();
+	
 }

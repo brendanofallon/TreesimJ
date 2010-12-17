@@ -29,6 +29,9 @@ public class NeXMLWriter implements TreeWriter {
 	public static final String XML_RANGEMIN = "rangemin";
 	public static final String XML_RANGEMAX = "rangemax";
 	
+	static final String header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?> \n <graphml> \n";
+	static final String closer = "</graphml>\n";
+	
 	@Override
 	public void writeTree(DiscreteGenTree tree, BufferedWriter writer)
 			throws IOException {
@@ -40,15 +43,10 @@ public class NeXMLWriter implements TreeWriter {
 		int seqLength = tip.getRecombineableData().length();
 		
 		String str = getString(graphDecomp, seqLength);
+		writer.write(header);
 		writer.write(str);
+		writer.write(closer);
 		
-		System.out.println(str);
-		try {
-			System.in.read();
-		}
-		catch(IOException ex) {
-			
-		}
 	}
 	
 	private String getString(GraphDecomposer decomp, int length) {
@@ -83,6 +81,11 @@ public class NeXMLWriter implements TreeWriter {
 		
 		strBuf.append("</" + XML_SECTION + ">\n");
 		return strBuf.toString();
+	}
+
+	@Override
+	public String getSuffix() {
+		return ".xml";
 	}
 	
 

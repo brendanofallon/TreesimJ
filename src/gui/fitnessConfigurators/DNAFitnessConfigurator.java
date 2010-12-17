@@ -135,6 +135,8 @@ public class DNAFitnessConfigurator implements FitnessModelConfigurator {
 		}
 		
 		MutationModel mutModel = dnaMaker.getMutationModel(rng);
+		double recRate = dnaMaker.getRecombinationRate();
+		mutModel.setRecombinationRate(recRate);
 		
 		DNASequence master = siteModel.generateMasterSequence(rng, dnaMaker.getDNALength(), mutModel); //new BitSetDNASequence(rng, dnaMaker.getDNALength(), mutModel);
 
@@ -156,6 +158,8 @@ public class DNAFitnessConfigurator implements FitnessModelConfigurator {
 				
 				String length = XMLParseable.Utils.getAttributeForKey(reader, TJXMLConstants.LENGTH);
 				String muRate = XMLParseable.Utils.getAttributeForKey(reader, TJXMLConstants.MUTATIONRATE);
+				String recRate = XMLParseable.Utils.getAttributeForKey(reader, TJXMLConstants.RECOMBINATIONRATE);
+				
 				try {
 					Integer l = Integer.parseInt(length);
 					dnaMaker.setDNALength(l);
@@ -170,6 +174,19 @@ public class DNAFitnessConfigurator implements FitnessModelConfigurator {
 				}
 				catch (Exception ex) {
 					System.err.println("Could not set mutation rate, couldn't parse a double from " + muRate);
+				}
+				
+				try {
+					if (recRate != null) {
+						Double r = Double.parseDouble(recRate); 
+						dnaMaker.setRecombinationRate(r);
+					}
+					else {
+						dnaMaker.setRecombinationRate(0.0);
+					}
+				}
+				catch (Exception ex) {
+					System.err.println("Could not set recombination rate, couldn't parse a double from " + recRate);
 				}
 				
 				advanceToNextStart(reader);

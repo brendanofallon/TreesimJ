@@ -19,10 +19,12 @@ import dnaModels.DNASequence;
  *
  */
 public abstract class MutationMatrixModel extends MutationModel {
-
+	
 	static double[][] matrix;	//A matrix of probabilities of mutation from a given base to another, conditional 
 								//on a mutation occurring... this does NOT include the mutation rate
 
+	
+	
 	protected static int matrixSize = 4;
 	protected static final int A = 0;
 	protected static final int C = 1;
@@ -37,6 +39,7 @@ public abstract class MutationMatrixModel extends MutationModel {
 	protected static Poisson poissonRNG;
 	protected static double mu = -1;	//The probability that any individual base mutates in a given generation
 	
+	protected double recRate = 0.0;
 	
 	//A couple of buffers that are used to store information about which sites have been mutated, this info
 	//is then passed to the sitemodel to calculate fitness quickly
@@ -51,6 +54,15 @@ public abstract class MutationMatrixModel extends MutationModel {
 		poissonRNG = new Poisson(1.0, rng);
 		rowTotals = new double[matrixSize];
 		rowTotalsCalculated = false;
+
+	}
+	
+	/**
+	 * Set the recombination rate for this sequence evolution model
+	 * @param recRate
+	 */
+	public void setRecombinationRate(double recRate) {
+		this.recRate = recRate;
 	}
 	
 	/**
@@ -108,6 +120,10 @@ public abstract class MutationMatrixModel extends MutationModel {
 	
 	public double getMu() {
 		return mu;
+	}
+	
+	public double getRecombinationRate() {
+		return recRate;
 	}
 	
 	public void mutate(DNASequence seq) {

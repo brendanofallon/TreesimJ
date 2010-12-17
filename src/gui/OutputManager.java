@@ -279,7 +279,7 @@ public class OutputManager implements Serializable {
 					count++;
 					fastaFileName = fastaFileStem + "_" + count + ".fas";
 					fastaFile = new File(fastaFileName);
-					treeFileName =  fastaFileStem + "_" + count + ".tre";
+					treeFileName =  fastaFileStem + "_" + count + treeWriter.getSuffix();
 					//treeFile = new File(treeFileName);
 				}
 				

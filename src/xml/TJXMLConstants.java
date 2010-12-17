@@ -12,6 +12,7 @@ public class TJXMLConstants {
 	public static final String TYPE = "type";
 	public static final String DISTRIBUTION = "distribution";
 	public static final String MUTATIONRATE = "mutation.rate";
+	public static final String RECOMBINATIONRATE = "recombination.rate";
 	public static final String FORWARD_MUTATION = "forward.mutation";
 	public static final String BACK_MUTATION = "back.mutation";
 	public static final String SELECTION = "selection";

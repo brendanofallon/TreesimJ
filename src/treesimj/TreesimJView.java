@@ -131,7 +131,9 @@ public class TreesimJView extends JFrame implements DoneListener, ProgressListen
         initPanels(); //Construct the various elements of the main JTabbedPane
         pack();
         setLocationRelativeTo(null);
-        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); //We handling closing ourselves so we can be sure to write the properties and do other shutdown stuff
+        
+        //We handling closing ourselves so we can be sure to write the properties and do other shutdown stuff
+        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         this.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent we) {
 				TreesimJApp.getApplication().shutdown();

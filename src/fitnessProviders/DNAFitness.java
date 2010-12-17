@@ -56,6 +56,7 @@ public class DNAFitness extends FitnessProvider implements Recombineable {
 		addXMLAttr(TJXMLConstants.TYPE, XML_ATTR);
 		addXMLAttr(TJXMLConstants.LENGTH, String.valueOf(master.length()));
 		addXMLAttr(TJXMLConstants.MUTATIONRATE, String.valueOf(mutMod.getMu()));
+		addXMLAttr(TJXMLConstants.RECOMBINATIONRATE, String.valueOf(mutMod.getRecombinationRate()));
 		addXMLChild(mutMod);
 		addXMLChild(siteModel);
 	}
@@ -85,6 +86,10 @@ public class DNAFitness extends FitnessProvider implements Recombineable {
 	
 	public double getMu() {
 		return mutMod.getMu();
+	}
+	
+	public MutationModel getMutationModel() {
+		return mutMod;
 	}
 	
 	public Object getSubstrate() {

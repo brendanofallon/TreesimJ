@@ -683,14 +683,14 @@ public class Population implements Serializable, Collectible {
 		 if (autoShortenRoot)
 			 shortenRoot();
 		 
-		 if (calls % 100 == 0) {
+		 if (calls % 500 == 0) {
 			 for(Locus ind : pop) {
 				 DNASequence master = ((DNAFitness) ind.getFitnessData()).getMaster();
 				 ((DNAFitness)ind.getFitnessData()).verifyFitness(master);
 			 }
 		 }
 		 
-		 recombine(0.005);
+		 recombine();
 		 calls++;
 	}
 	
@@ -711,10 +711,18 @@ public class Population implements Serializable, Collectible {
 	 * generation is rate*N. 
 	 * @param rate Recombination rate, such that expected number of recombinations is N*rate
 	 */
-	protected void recombine(double rate) {
+	protected void recombine() {
 		int count = 0;
+		FitnessProvider fitnessModel = pop.get(0).getFitnessData();
+		if (! (fitnessModel instanceof DNAFitness)) {
+			return;
+		}
+		DNAFitness dnaFitness = (DNAFitness)fitnessModel;
+		double rate = dnaFitness.getMutationModel().getRecombinationRate();
 		poissonGenerator.setMean(rate / 2.0 * pop.size()); //Since each recombination event involves two individuals, rate/2 is the pairwise rate
+		
 		int recombiningPairs = poissonGenerator.nextInt();
+		//System.out.println("Recombining with rate : " + (rate / 2.0 * pop.size()) + " actual number of recombining pairs: " + recombiningPairs);
 		for(int i=0; i<recombiningPairs; i++) {
 			Locus one = pop.get(uniGenerator.nextIntFromTo(0, pop.size()-1));
 			while( one.hasRecombination() && count < 1000) {

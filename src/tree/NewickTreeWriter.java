@@ -17,4 +17,9 @@ public class NewickTreeWriter implements TreeWriter {
 
 	}
 
+	@Override
+	public String getSuffix() {
+		return ".tre";
+	}
+
 }
