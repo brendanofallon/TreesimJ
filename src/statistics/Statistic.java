@@ -268,7 +268,9 @@ public abstract class Statistic extends XMLParseable implements Serializable {
 			return formatter.format(val);
 	}
 	
-	//If we should sample this statistic during the burnin period
+	/**
+	 * If we should sample this statistic during the burnin period
+	 */
 	public boolean collectDuringBurnin() {
 		return true;
 	}

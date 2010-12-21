@@ -1,5 +1,7 @@
 package statistics.treeShape;
 
+import java.io.PrintStream;
+
 import statistics.Collectible;
 import statistics.Options;
 import statistics.Statistic;
@@ -47,4 +49,31 @@ public class NumBreakPoints extends TreeStatistic {
 		
 	}
 
+	
+	/**
+	 * Here we override the summary basically just to ensure the resulting histogram has integer-width bins
+	 * @param out
+	 */
+	public void summarize(PrintStream out) {
+		out.println("Summary for " + getIdentifier() + " ( " + getDescription() + " )");
+		out.println("Number of samples : \t" + values.size());
+		out.println("Mean :\t" + getMean());
+		out.println("Variance :\t" + getVariance());
+
+		double max;
+		if (userHistoMax!=null)
+			max = this.userHistoMax;
+		else {
+			max = histoBins;
+		}
+
+		double min;
+		if (userHistoMin!=null)
+			min = userHistoMin;
+		else {
+			min = 0;
+		}
+
+		emitHistogram(histoBins, min, max, out);
+	}
 }
