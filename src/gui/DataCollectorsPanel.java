@@ -49,6 +49,7 @@ import statistics.fitness.StdevFitness;
 import statistics.fitness.Tau;
 import statistics.treeShape.CoalIntervalStat;
 import statistics.treeShape.CollessIndex;
+import statistics.treeShape.NumBreakPoints;
 import statistics.treeShape.PairwiseCTime;
 import statistics.treeShape.SackinsIndex;
 import statistics.treeShape.SackinsVariance;
@@ -173,6 +174,7 @@ public class DataCollectorsPanel extends JPanel implements XMLConfigurable {
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(SackinsIndex.identifier), lightColor);
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(SackinsVariance.identifier), darkColor);
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(CollessIndex.identifier), lightColor);
+		addSingleDataCollectorItem((Statistic)sReg.getInstance(NumBreakPoints.identifier), darkColor);
 		
 		addSeparator("Fitness statistics");
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(MeanFitness.identifier), darkColor);

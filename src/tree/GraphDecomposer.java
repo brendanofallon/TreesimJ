@@ -31,10 +31,8 @@ public class GraphDecomposer {
 		edges = new ArrayList<Branch>();
 		
 		List<Locus> tips = tree.getTips();
-		//List<Integer> breakpoints = tree.collectBreakPoints();
 		
 		//Traverse through each tip, adding as many nodes/branches as we can
-		
 		for(Locus tip : tips) {
 			GraphNode tipNode = new GraphNode(0, tip.getID());
 			
@@ -42,18 +40,18 @@ public class GraphDecomposer {
 			nodes.add(tipNode);
 		}
 		
-		String newick = tree.getNewick();
-		System.out.println("Tree: " + newick);
+//		String newick = tree.getNewick();
+		//System.out.println("Tree: " + newick);
 		
-		System.out.println("Found " + edges.size() + " branches:" );
-		for(Branch branch : edges) {
-			System.out.println(branch);
-		}
+//		System.out.println("Found " + edges.size() + " branches:" );
+//		for(Branch branch : edges) {
+//			System.out.println(branch);
+//		}
 		
-		System.out.println("Found " + nodes.size() + " nodes");
-		for(GraphNode node : nodes) {
-			System.out.println(node);
-		}
+//		System.out.println("Found " + nodes.size() + " nodes");
+//		for(GraphNode node : nodes) {
+//			System.out.println(node);
+//		}
 	}
 
 	/**
@@ -122,8 +120,7 @@ public class GraphDecomposer {
 					
 					stack.push(newBundle);
 					stack.push(recomBundle);
-					System.out.println("Adding recombinant branch to stack...");
-					
+									
 				}
 				else {
 					//No recombination, only push a new branch if there's a coalescence here 

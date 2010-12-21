@@ -23,6 +23,7 @@ import statistics.fitness.Tau;
 import statistics.treeShape.CladeSizeDistro;
 import statistics.treeShape.CoalIntervalStat;
 import statistics.treeShape.CollessIndex;
+import statistics.treeShape.NumBreakPoints;
 import statistics.treeShape.PairwiseCTime;
 import statistics.treeShape.SackinsIndex;
 import statistics.treeShape.SackinsVariance;
@@ -74,6 +75,7 @@ public class StatisticRegistry {
 		add(new FStar());
 		add(new MeanLineageFitness());
 		add(new AbsoluteFitnessDistro());
+		add(new NumBreakPoints());
 	}
 	
 	public Statistic getInstance(String id) {

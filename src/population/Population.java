@@ -252,9 +252,9 @@ public class Population implements Serializable, Collectible {
 		
 		//System.out.println("..done");
 		
-		if (getCurrentGenNumber()%50==0) {
-			System.out.println("Current gen: "+ getCurrentGenNumber() + " FC depth : " + depth + " total nodes: " + nodeTotal);
-		}
+//		if (getCurrentGenNumber()%50==0) {
+//			System.out.println("Current gen: "+ getCurrentGenNumber() + " FC depth : " + depth + " total nodes: " + nodeTotal);
+//		}
 		return sample.get(0);
 	}
 	
@@ -545,7 +545,7 @@ public class Population implements Serializable, Collectible {
 			return null;
 		}
 		
-		System.out.println("Found sample MRCA on iteration " + iteration);
+		//System.out.println("Found sample MRCA on iteration " + iteration);
 		return new DiscreteGenTree(sampleKids.get(0), sample);
 	}
 	
