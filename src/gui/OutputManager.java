@@ -25,7 +25,7 @@ import statistics.Statistic;
 import statistics.TreeCollectionListener;
 import statistics.TreeSampler;
 import tree.DiscreteGenTree;
-import tree.NeXMLWriter;
+import tree.GraphMLWriter;
 import tree.NewickTreeWriter;
 import tree.TreeWriter;
 import treesimj.SerializablePrintStream;
@@ -78,9 +78,9 @@ public class OutputManager implements Serializable {
 	
 	protected DemographicModel demoModel = null; //This is just used to get the current generation number
 	
-	protected int repeatNumber = 0; 		//Experimental, not currently in use
+	protected int repeatNumber = 0; //Experimental, not currently in use
 	
-	protected TreeWriter treeWriter = new NeXMLWriter(); 
+	protected TreeWriter treeWriter = new GraphMLWriter(); 
 	
 	//Maintain a static reference so we can access this easily from a variety of places
 	public static OutputManager globalOutputHandler;
@@ -271,7 +271,7 @@ public class OutputManager implements Serializable {
 				System.out.println("Writing fasta file on generation " + String.valueOf(demoModel.getCurrentGenNumber()));
 				
 				String fastaFileName = fastaFileStem + /*"_g" + String.valueOf(demoModel.getCurrentGenNumber()) + rNum + */ ".fas";
-				String treeFileName = fastaFileStem +  /* "_tree_g" + String.valueOf(demoModel.getCurrentGenNumber()) + rNum + */ ".tre";
+				String treeFileName = fastaFileStem +  /* "_tree_g" + String.valueOf(demoModel.getCurrentGenNumber()) + rNum + */ treeWriter.getSuffix();
 				File fastaFile = new File(fastaFileName);
 				//File treeFile = new File(treeFileName);
 				int count = 0;

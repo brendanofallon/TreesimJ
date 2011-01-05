@@ -48,6 +48,12 @@ public class Population implements Serializable, Collectible {
 	
 	int myPopNumber;
 	
+	//A couple of buffers used to quickly look up which parents are already in the stack, utilized by
+	//releaseIndividual, which is a big performance bottleneck
+	private Stack<Locus> relInds = new Stack<Locus>();
+	private Set<Long> relIndSet = new HashSet<Long>(); 
+
+	
 	//Automatically walk the root up the population tree as much as possible each generation. If we only have
 	//a single population this is desireably since individuals more basal than the root can be garbage collected. However
 	// in multiple population scenarios individual pops can't generally do their own shortening, since there's a global
@@ -252,9 +258,9 @@ public class Population implements Serializable, Collectible {
 		
 		//System.out.println("..done");
 		
-//		if (getCurrentGenNumber()%50==0) {
-//			System.out.println("Current gen: "+ getCurrentGenNumber() + " FC depth : " + depth + " total nodes: " + nodeTotal);
-//		}
+		if (getCurrentGenNumber()%200==0) {
+			System.out.println("Current gen: "+ getCurrentGenNumber() + " FC depth : " + depth + " total nodes: " + nodeTotal);
+		}
 		return sample.get(0);
 	}
 	
@@ -603,7 +609,10 @@ public class Population implements Serializable, Collectible {
 			throw new IllegalStateException("List is null, for pop #" + myPopNumber);
 		}
 		
-		if (currentGen % 10 ==0) {
+		//Locating the MRCA of everyone is slow, so we don't want to do it too often. But doing
+		//it very infrequently really increases the memory requirements, so there's a bit of a tradeoff
+		//Right now we just do it every 20 generations and hope thats ok
+		if (currentGen % 20 ==0) {
 			root = findFC(pop);
 			root.setParent(null);
 		}
@@ -664,6 +673,8 @@ public class Population implements Serializable, Collectible {
 		//zero offspring. This allows the garbage collector to collect these items
 		//At some point it may be more efficient to return these to a pool...
 		int newlyPreserved = 0;
+		
+		//Old locus removal scheme here...
 		for(Locus ind : pop) {
 			if (ind.isPreserve()) {
 				preservedIndividuals.add(ind);
@@ -671,9 +682,22 @@ public class Population implements Serializable, Collectible {
 			}
 			else {
 				if (ind.numOffspring()==0 && !ind.isPreserve())
-					releaseIndividual(ind);
+					releaseLocus(ind);
 			}
 		}
+		
+		//New mark-sweep locus removal scheme here
+		//Mark all removable ancestors
+//		for(Locus loc : pop) {
+//			if (loc.numOffspring()==0 && !(loc.isPreserve())) 
+//					markLocusAndAncestors(loc);
+//		}
+//		//Clear all removeable ancestors
+//		for(Locus loc : pop) {
+//			if (loc.isRemoveable()) 
+//					removeLocusAndAncestors(loc);
+//		}
+		
 		
 //		if (newlyPreserved>0)
 //			System.out.println("Preserving " + newlyPreserved + " new individuals; total is now " + preservedIndividuals.size() );
@@ -683,7 +707,7 @@ public class Population implements Serializable, Collectible {
 		 if (autoShortenRoot)
 			 shortenRoot();
 		 
-		 if (calls % 500 == 0) {
+		 if (calls % 1000 == 0) {
 			 for(Locus ind : pop) {
 				 DNASequence master = ((DNAFitness) ind.getFitnessData()).getMaster();
 				 ((DNAFitness)ind.getFitnessData()).verifyFitness(master);
@@ -764,9 +788,9 @@ public class Population implements Serializable, Collectible {
 	}
 	
 	/**
-	 * Attempt to remove the given individual from the population and clear it's links so that it can be garbage collected.
+	 * Attempt to remove the given individual from the population and clear its links so that it can be garbage collected.
 	 * This is done in a recombination-aware manner, and only releases individuals if they have zero offspring and either
-	 * are have no recombination partner or a recombination partner also with zero offspring. 
+	 * have no recombination partner or a recombination partner also with zero offspring. 
 	 * 
 	 * In general, it's not safe to call this haphazardly on just a few individuals from some generation, because it may
 	 * create individuals with null parents. To avoid this, it must be called repeatedly for every releaseable individual
@@ -774,7 +798,7 @@ public class Population implements Serializable, Collectible {
 	 * @param loc
 	 * @return
 	 */
-	private int releaseIndividual(Locus loc) {
+	private int releaseLocus(Locus loc) {
 		if (loc.numOffspring()>0)
 			return 0;
 		
@@ -786,19 +810,14 @@ public class Population implements Serializable, Collectible {
 			return 0;
 		}
 		
-		Stack<Locus> relInds = new Stack<Locus>();
-		Set<Locus> relIndSet = new HashSet<Locus>(); //Another buffer used to quickly look up which parents are already in the stack
 		
 		int tot = 0;
 		Locus locRef;
-	
-		//A stack of loci that are definitely going to be removed.. they're added only if
-		//they have an offspring ref count == 0
 		
 		relInds.clear();
 		relIndSet.clear();
 		relInds.add(loc);
-		relIndSet.add(loc);
+		relIndSet.add(loc.getID());
 		
 		while(relInds.size()>0) {
 			locRef = relInds.pop();
@@ -807,35 +826,40 @@ public class Population implements Serializable, Collectible {
 				System.err.println("Hmm, locRef ind has nonzero offspring count");
 			}
 			
+			//If the locus has a recombination breakpoint, we can only clear it if it's partner has zero offspring
+			//Furthermore 
 			if (locRef.hasRecombination()) {
 				Locus partner = locRef.getRecombinationPartner();
 				
+				//If recomb partner has no offspring, we add it to the stack as well as ourselves
 				if (partner.numOffspring()==0) {
 					Locus parent = locRef.getParent();
 					
 					clearLocus(locRef);
-					if (parent.numOffspring()==0 && (!relIndSet.contains(parent))) {
+					if (parent.numOffspring()==0 && (!relIndSet.contains(parent.getID()))) {
 						relInds.add(parent);
-						relIndSet.add(parent);
+						relIndSet.add(parent.getID());
 					}
 					
 					//We only add if the partner's recombination partner isn't null.. this is because if we already
-					//released the partner it's recomb. ref will be set to null, otherwise we'll end up adding it
+					//released the partner its recomb. ref will be set to null, otherwise we'll end up adding it
 					//to the stack again
-					if (!relIndSet.contains(partner) && partner.getRecombinationPartner()!=null) {
+					if (!relIndSet.contains(partner.getID()) && partner.getRecombinationPartner()!=null) {
 						relInds.add(partner);
-						relIndSet.add(partner);
+						relIndSet.add(partner.getID());
 					}
 				}
 			}
 			else {
-				//Only one parent here since there's no recombinations
+				//Only one parent here since there's no recombinations. I think that we don't need to check here
+				//to see if we've already added the locus to the stack... since there's no recombinations 
+				//we can't have reached it in this particular call to releaseIndividual. This is a really big speedup.
 				Locus parent = locRef.getParent();
 				
 				clearLocus(locRef);
-				if (parent.numOffspring()==0 && (!relIndSet.contains(parent))) {
+				if (parent.numOffspring()==0 /* && (!relIndSet.contains(parent)) */ ) {
 					relInds.add(parent);
-					relIndSet.add(parent);
+					/* relIndSet.add(parent.getID()); */ 
 				}
 			}
 		}
@@ -863,7 +887,7 @@ public class Population implements Serializable, Collectible {
 		//System.out.println("Releasing " + preservedIndividuals.size() + " preserved inds ");
 		for(Locus ind : preservedIndividuals) {
 			if (ind.numOffspring()==0 && !pop.contains(ind)) { //Remove all inds not in the current generation
-				releaseIndividual(ind);
+				releaseLocus(ind);
 			}		
 		}
 		

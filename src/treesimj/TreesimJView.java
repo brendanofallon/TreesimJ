@@ -78,12 +78,13 @@ import dnaModels.DNASequence;
  */
 public class TreesimJView extends JFrame implements DoneListener, ProgressListener {
 	
-	public static final boolean DEBUG = false; //Turn on a debug mode, currently all this does is allow the simulation to
-											   //be run in the foreground, in which case all exceptions are caught in
-											   //a reasonable manner (normally the sim executes in a background thread in
-											   //exceptions are lost in the ether, and just cause the thread to die)
+	//Turn on a debug mode, currently all this does is allow the simulation to
+   //be run in the foreground, in which case all exceptions are caught in
+   //a reasonable manner (normally the sim executes in a background thread in
+   //exceptions are lost in the ether, and just cause the thread to die)
+	public static final boolean DEBUG = false; 
 	
-	PopulationRunner runner; //The object resposible for actually running population	
+	PopulationRunner runner; //The object responsible for actually running population	
 
 	RunSettingsPanel runSettingsPanel;
 	private DemographicModelPanel demoModelPanel;
@@ -105,7 +106,7 @@ public class TreesimJView extends JFrame implements DoneListener, ProgressListen
         try {
         	String plaf = UIManager.getSystemLookAndFeelClassName();
         	String gtkLookAndFeel = "com.sun.java.swing.plaf.gtk.GTKLookAndFeel";
-        	//Attempt to avoid metal look and feel if possible
+        	//Attempt to avoid metal look and feel if at all possible
         	if (plaf.contains("metal")) {
         		UIManager.setLookAndFeel(gtkLookAndFeel);
         	}

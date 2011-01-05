@@ -7,6 +7,7 @@ import java.util.List;
 import cern.jet.random.engine.RandomEngine;
 import dnaModels.DNASequence;
 import fitnessProviders.FitnessProvider;
+import java.util.LinkedList;
 
 /**
  * A single, potentially recombining genetic locus, with references to exactly one parent, zero or more offspring loci, and zero
@@ -31,7 +32,8 @@ public class Locus implements Serializable, Comparable {
 	
 	protected String pop = "Main population";
 	
-	protected boolean preserve; //A flag to indicate whether or not this individual can be cleared from the population. Used for serial-tree sampling
+	//A flag to indicate whether or not this individual can be cleared from the population. Used for serial-tree sampling
+	protected boolean preserve; 
 	
 	//Potentially null, this is a member of the same generation as this ind with whom we've exchanged genetic info via 'recombine'
 	protected Locus recombinationPartner = null;
@@ -39,8 +41,12 @@ public class Locus implements Serializable, Comparable {
 	protected int breakPointMin = 0; //These variables specify the boundaries of the recombinant region, such that this part of the chromosome is assumed
 	protected int breakPointMax = 0; //to have actually come from the locus 'recomPartner'	
 	
+	//This flag is used to facilitate locus removal in the mark-sweep scheme. Don't confuse it with preserve, which is 
+	//used for long-term locus preservation when serial sampling
+	protected boolean removeMe = false;
+	
 	public Locus(RandomEngine rng) {
-		offspring = new ArrayList<Locus>(2);
+		offspring = new ArrayList<Locus>(5);
 		parent = null;
 		relativeFitness = 1.0;
 		this.rng = rng;
@@ -56,6 +62,22 @@ public class Locus implements Serializable, Comparable {
 	
 	public int getOriginPop() {
 		return originPop;
+	}
+	
+	/**
+	 * Flag this locus to indicate that it can be removed from the population
+	 */
+	public void setRemoveOK() {
+		removeMe = true;
+	}
+	
+	/**
+	 * Obtain the value of the removeMe flag, which is set to indicate that this locus should
+	 * be removed from the population. 
+	 * @return
+	 */
+	public boolean isRemoveable() {
+		return removeMe;
 	}
 
 	

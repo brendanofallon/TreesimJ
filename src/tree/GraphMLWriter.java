@@ -17,7 +17,7 @@ import tree.GraphDecomposer.GraphNode;
  * @author brendan
  *
  */
-public class NeXMLWriter implements TreeWriter {
+public class GraphMLWriter implements TreeWriter {
 
 	public static final String XML_NODE = "node";
 	public static final String XML_EDGE = "edge";
