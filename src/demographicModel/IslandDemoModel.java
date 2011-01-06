@@ -62,23 +62,23 @@ public class IslandDemoModel extends MultiPopDemoModel {
 	 * A debugging function that counts the total number of nodes in the tree, helpful for detecting memory leaks. 
 	 * @return
 	 */
-	public int countTotalTreeSize() {
-		Stack<Locus> inds = new Stack<Locus>();
-		inds.push(globalRoot);
-		int count = 0;
-		int tips = 0;
-		while(inds.size()>0) {
-			Locus ind = inds.pop();
-			count++;
-			if (ind.isTip()) {
-				tips++;
-			}
-			for(Locus kid : ind.getOffspring())
-				inds.push(kid);
-		}
-		
-		return count;
-	}
+//	public int countTotalTreeSize() {
+//		Stack<Locus> inds = new Stack<Locus>();
+//		inds.push(globalRoot);
+//		int count = 0;
+//		int tips = 0;
+//		while(inds.size()>0) {
+//			Locus ind = inds.pop();
+//			count++;
+//			if (ind.isTip()) {
+//				tips++;
+//			}
+//			for(Locus kid : ind.getOffspring())
+//				inds.push(kid);
+//		}
+//		
+//		return count;
+//	}
 	
 	public void setSamplingStrategy(MultiPopCollectible.Strategy strat, int popNum) {
 		this.samplingStrategy = strat;
@@ -97,7 +97,7 @@ public class IslandDemoModel extends MultiPopDemoModel {
 			pop.newGen( populationSize );
 		}
 		migrate();
-		shortenGlobalRoot();	
+		//shortenGlobalRoot();	
 	}
 	
 	private void migrate() {

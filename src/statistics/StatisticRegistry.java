@@ -76,6 +76,7 @@ public class StatisticRegistry {
 		add(new MeanLineageFitness());
 		add(new AbsoluteFitnessDistro());
 		add(new NumBreakPoints());
+		add(new NodeCount());
 	}
 	
 	public Statistic getInstance(String id) {

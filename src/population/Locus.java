@@ -41,10 +41,7 @@ public class Locus implements Serializable, Comparable {
 	protected int breakPointMin = 0; //These variables specify the boundaries of the recombinant region, such that this part of the chromosome is assumed
 	protected int breakPointMax = 0; //to have actually come from the locus 'recomPartner'	
 	
-	//This flag is used to facilitate locus removal in the mark-sweep scheme. Don't confuse it with preserve, which is 
-	//used for long-term locus preservation when serial sampling
-	protected boolean removeMe = false;
-	
+
 	public Locus(RandomEngine rng) {
 		offspring = new ArrayList<Locus>(5);
 		parent = null;
@@ -62,22 +59,6 @@ public class Locus implements Serializable, Comparable {
 	
 	public int getOriginPop() {
 		return originPop;
-	}
-	
-	/**
-	 * Flag this locus to indicate that it can be removed from the population
-	 */
-	public void setRemoveOK() {
-		removeMe = true;
-	}
-	
-	/**
-	 * Obtain the value of the removeMe flag, which is set to indicate that this locus should
-	 * be removed from the population. 
-	 * @return
-	 */
-	public boolean isRemoveable() {
-		return removeMe;
 	}
 
 	
@@ -403,6 +384,8 @@ public class Locus implements Serializable, Comparable {
 	public void clearReferences() {
 		parent = null;
 		recombinationPartner = null;
+		offspring.clear();
+		fitnessData = null;
 	}
 	
 	/**

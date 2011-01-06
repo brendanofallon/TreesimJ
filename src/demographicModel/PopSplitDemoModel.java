@@ -125,7 +125,7 @@ public class PopSplitDemoModel extends MultiPopDemoModel {
 			pop2 = new Population();
 			pop1.setAutoShortenRoot(false);
 			pop2.setAutoShortenRoot(false);
-			globalRoot = ancPop.getRoot();
+			//globalRoot = ancPop.getRoot();
 			
 			pop1.initialize(rng, ancPop, Math.min(popOneSize, ancPop.size()));
 			pop2.initialize(rng, ancPop, Math.min(popTwoSize, ancPop.size()));
@@ -164,7 +164,7 @@ public class PopSplitDemoModel extends MultiPopDemoModel {
 			}
 		}
 		
-		shortenGlobalRoot();
+		//shortenGlobalRoot();
 	}
 	
 	@Override

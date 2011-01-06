@@ -26,6 +26,7 @@ import javax.xml.stream.XMLStreamReader;
 
 import statistics.BranchRateStatistic;
 import statistics.MeanSpeed;
+import statistics.NodeCount;
 import statistics.PopulationSizeStatistic;
 import statistics.Statistic;
 import statistics.StatisticRegistry;
@@ -202,6 +203,7 @@ public class DataCollectorsPanel extends JPanel implements XMLConfigurable {
 		addSeparator("Utilities");
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(MeanSpeed.identifier), darkColor);
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(PopulationSizeStatistic.identifier), lightColor);
+		addSingleDataCollectorItem((Statistic)sReg.getInstance(NodeCount.identifier), darkColor);
 		
 		addSeparator("Experimental");
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(BranchRateStatistic.identifier), darkColor);

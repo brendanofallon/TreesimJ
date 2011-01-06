@@ -36,7 +36,6 @@ public class GraphMLWriter implements TreeWriter {
 	public void writeTree(DiscreteGenTree tree, BufferedWriter writer)
 			throws IOException {
 		
-
 		GraphDecomposer graphDecomp = new GraphDecomposer();
 		graphDecomp.parseGraph(tree);
 		Locus tip = tree.getTips().get(0);

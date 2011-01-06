@@ -46,7 +46,7 @@ public class TMRCA extends Statistic {
 	}
 	
 	public void collect(Collectible pop) {
-		values.add((double)pop.getInd(0).distToRoot()/(double)pop.size());
+		values.add((double)pop.getInd(0).distToRoot());
 	}
 
 	public boolean showOnScreenLog() {

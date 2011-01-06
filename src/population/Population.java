@@ -207,6 +207,8 @@ public class Population implements Serializable, Collectible {
 
 	}
 	
+
+	
 	
 	/**
 	 * Find the most recent common ancestor that is the parent of all individuals in the given sample. This method is 
@@ -258,14 +260,21 @@ public class Population implements Serializable, Collectible {
 		
 		//System.out.println("..done");
 		
-		if (getCurrentGenNumber()%200==0) {
-			System.out.println("Current gen: "+ getCurrentGenNumber() + " FC depth : " + depth + " total nodes: " + nodeTotal);
-		}
+//		if (getCurrentGenNumber()%200==0) {
+//			System.out.println("Current gen: "+ getCurrentGenNumber() + " FC depth : " + depth + " total nodes: " + nodeTotal);
+//		}
 		return sample.get(0);
 	}
 	
 	
-
+	/**
+	 * Return the root locus of this population. Note that if this population is part of a multi-pop demographic model the
+	 * root may not be defined. 
+	 * @return
+	 */
+	public Locus getRoot() {
+		return root;
+	}
 	
 
 	
@@ -379,18 +388,15 @@ public class Population implements Serializable, Collectible {
 		boolean sane = true;
 		int depth = 0;
 		
+
+
 		for(Locus ind : pop) {
-			while(ind.getParent() != root) {
-				if (ind.getParent()==null) {
+			while(ind.getParent() != null) {
+
+				Locus parent = ind.getParent();
+				if (! parent.getOffspring().contains(ind)) {
+					System.err.println("Parent/offspring links are inconsistent for parent: " + parent.getID() + " at depth: " + depth);
 					sane = false;
-					System.err.println("Individual " + ind.getID() + " has a null parent at depth: " + depth);
-				}
-				else {
-					Locus parent = ind.getParent();
-					if (! parent.getOffspring().contains(ind)) {
-						System.err.println("Parent/offspring links are inconsistent for parent: " + parent.getID() + " at depth: " + depth);
-						sane = false;
-					}
 				}
 
 				if (ind.hasRecombination()) {
@@ -612,7 +618,7 @@ public class Population implements Serializable, Collectible {
 		//Locating the MRCA of everyone is slow, so we don't want to do it too often. But doing
 		//it very infrequently really increases the memory requirements, so there's a bit of a tradeoff
 		//Right now we just do it every 20 generations and hope thats ok
-		if (currentGen % 20 ==0) {
+		if (currentGen % 100 ==0) {
 			root = findFC(pop);
 			root.setParent(null);
 		}
@@ -686,26 +692,14 @@ public class Population implements Serializable, Collectible {
 			}
 		}
 		
-		//New mark-sweep locus removal scheme here
-		//Mark all removable ancestors
-//		for(Locus loc : pop) {
-//			if (loc.numOffspring()==0 && !(loc.isPreserve())) 
-//					markLocusAndAncestors(loc);
-//		}
-//		//Clear all removeable ancestors
-//		for(Locus loc : pop) {
-//			if (loc.isRemoveable()) 
-//					removeLocusAndAncestors(loc);
-//		}
-		
 		
 //		if (newlyPreserved>0)
 //			System.out.println("Preserving " + newlyPreserved + " new individuals; total is now " + preservedIndividuals.size() );
 		
 		 pop = newPop;
-		 
-		 if (autoShortenRoot)
-			 shortenRoot();
+//		 
+//		 if (autoShortenRoot)
+//			 shortenRoot();
 		 
 		 if (calls % 1000 == 0) {
 			 for(Locus ind : pop) {
@@ -784,6 +778,7 @@ public class Population implements Serializable, Collectible {
 			}
 		}
 		loc.getParent().removeOffspring(loc);
+		loc.setParent(null);
 		loc.clearReferences();
 	}
 	
@@ -892,7 +887,7 @@ public class Population implements Serializable, Collectible {
 		}
 		
 		preservedIndividuals.clear();
-		shortenRoot();
+	//	shortenRoot();
 	}
 
 
@@ -904,9 +899,9 @@ public class Population implements Serializable, Collectible {
 	 * (typically in by the globalRoot individual in the MultiPopDemoModel class)
 	 * @return
 	 */
-	public Locus getRoot() {
-		return root;
-	}
+//	public Locus getRoot() {
+//		return root;
+//	}
 	
 	/**
 	 * Remove num individuals from this population and return them in a list

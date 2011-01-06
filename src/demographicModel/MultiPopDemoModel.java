@@ -17,7 +17,7 @@ import statistics.Collectible;
 public abstract class MultiPopDemoModel extends DemographicModel {
 
 	//A single individual that is the ancestor of all others. This moves when we call shortenGlobalRoot 
-	Locus globalRoot = null;
+	//Locus globalRoot = null;
 	
 	//A list of all populations in the world
 	List<Population> popList = new ArrayList<Population>();
@@ -40,7 +40,7 @@ public abstract class MultiPopDemoModel extends DemographicModel {
 	 * Initialize all populations in this model and attaches the population roots to the globalRoot
 	 */
 	public void initializePopulations(RandomEngine rng, FitnessProvider fitnessModel) {
-		globalRoot = new Locus(rng);
+		Locus globalRoot = new Locus(rng);
 		
 		for(Population pop : getPopList()) {
 			Locus popRoot = pop.initialize(rng, 1, fitnessModel);
@@ -94,15 +94,15 @@ public abstract class MultiPopDemoModel extends DemographicModel {
 	/**
 	 * Move the global root toward the tips until it has >1 offspring, and release memory behind (basal to) it. 
 	 */
-	protected void shortenGlobalRoot() {
-		int steps = 0;
-		while (globalRoot.numOffspring()==1) {
-			if (globalRoot.getParent()!=null)
-				globalRoot.getParent().removeOffspring(globalRoot);
-			globalRoot.setParent(null);
-			globalRoot = globalRoot.getOffspring(0);
-			steps++;
-		}
-
-	}
+//	protected void shortenGlobalRoot() {
+//		int steps = 0;
+//		while (globalRoot.numOffspring()==1) {
+//			if (globalRoot.getParent()!=null)
+//				globalRoot.getParent().removeOffspring(globalRoot);
+//			globalRoot.setParent(null);
+//			globalRoot = globalRoot.getOffspring(0);
+//			steps++;
+//		}
+//
+//	}
 }
