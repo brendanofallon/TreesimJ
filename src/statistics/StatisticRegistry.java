@@ -78,6 +78,7 @@ public class StatisticRegistry {
 		add(new NumBreakPoints());
 		add(new NodeCount());
 		add(new BreakpointDensity());
+		add(new TMRCADensity());
 	}
 	
 	public Statistic getInstance(String id) {

@@ -6,7 +6,7 @@ import java.text.NumberFormat;
 
 /**
  * A list of bins of values. The number of bins, bin spacing, histogram minimum and maximum are all set once
- * when the histogram is created. addValue(...) increases the count of the appropriate bin, and toString() emit
+ * when the histogram is created. addValue(...) increases the count of the appropriate bin, and toString() emits
  * a decently formatted summary. 
  * 
  * @author brendan
@@ -23,6 +23,10 @@ public class Histogram implements Serializable {
 	double moreThanMax = 0;
 	
 	double currentSum = 0;
+	
+	//We also maintain a running tally of the standard deviation, computing using an algorithm
+	//from the wikipedia page on standard deviation
+	double currentStdev = 0;
 	
 	int count = 0;
 	
@@ -50,6 +54,7 @@ public class Histogram implements Serializable {
 	}
 	
 	public void addValue(double val) {
+		double prevMean = getMean(); //Needed to compute running stdev
 		count++;
 		if (val<minValue) {
 			lessThanMin++;
@@ -59,12 +64,24 @@ public class Histogram implements Serializable {
 			moreThanMax++;
 			return;
 		}
+		
 		currentSum += val; 
+		if (count>1)
+			currentStdev += (val-prevMean)*(val-getMean());
 		hist[ (int)Math.floor( (val-minValue)/(maxValue-minValue)*(double)hist.length ) ]++;
 	}
 	
 	public double getMean() {
 		return currentSum / (double)count;
+	}
+	
+	/**
+	 * This actually returns an exact standard deviation - it's not computed from the bins frequencies; it's kept as a running
+	 * value from all of the values added. 
+	 * @return
+	 */
+	public double getStdev() {
+		return Math.sqrt( currentStdev / (double)count );
 	}
 	
 	public double getBinWidth() {
@@ -81,13 +98,16 @@ public class Histogram implements Serializable {
 	
 	public String toString() {
 		StringBuilder str = new StringBuilder();
-		
-		str.append(" < " + minValue + " : " + formatter.format((double)lessThanMin/(double)count) + "\n");
-		for(int i=0; i<hist.length; i++) {
-			str.append(formatter.format(i*binSpacing+minValue) + "\t" + formatter.format(hist[i]/(double)count) + "\n");
+		if (count == 0) {
+			str.append("(no data collected)");
 		}
-		str.append(" > " + maxValue + " : " + formatter.format((double)moreThanMax/(double)count) + "\n");
-		
+		else {
+			str.append(" < " + minValue + " : " + formatter.format((double)lessThanMin/(double)count) + "\n");
+			for(int i=0; i<hist.length; i++) {
+				str.append(formatter.format(i*binSpacing+minValue) + "\t" + formatter.format(hist[i]/(double)count) + "\n");
+			}
+			str.append(" > " + maxValue + " : " + formatter.format((double)moreThanMax/(double)count) + "\n");
+		}
 		return str.toString();
 	}
 }

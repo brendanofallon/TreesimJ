@@ -26,7 +26,7 @@ public class DiscreteGenTree {
 	private Locus root = null;
 	private List<Locus> tips = new ArrayList<Locus>();
 	
-	public DiscreteGenTree(Locus root,List<Locus> tips) {
+	public DiscreteGenTree(Locus root, List<Locus> tips) {
 		this.root = root;
 		this.tips.addAll(tips);
 	}

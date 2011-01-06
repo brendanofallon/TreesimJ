@@ -30,6 +30,9 @@ public class BreakpointDensity extends TreeStatistic {
 
 	@Override
 	public void collect(DiscreteGenTree tree) {
+		if (tree == null)
+			return;
+		
 		if (histo == null) {
 			int dnaLength = pop.getInd(0).getRecombineableData().length();
 			histo = new Histogram(bins, 0, dnaLength / bins);
@@ -44,7 +47,7 @@ public class BreakpointDensity extends TreeStatistic {
 
 	public void summarize(PrintStream out) {
 		out.println("Summary for " + getIdentifier() + " ( " + getDescription() + " )");
-		out.println("Number of samples : \t" + values.size());
+		out.println("Number of samples : \t" + histo.getCount());
 		String histoStr = histo.toString();
 		out.println(histoStr);
 	}

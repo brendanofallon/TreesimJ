@@ -25,11 +25,13 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import statistics.BranchRateStatistic;
+import statistics.BreakpointDensity;
 import statistics.MeanSpeed;
 import statistics.NodeCount;
 import statistics.PopulationSizeStatistic;
 import statistics.Statistic;
 import statistics.StatisticRegistry;
+import statistics.TMRCADensity;
 import statistics.TreeStatistic;
 import statistics.TwoAlleleFrequency;
 import statistics.dna.DStar;
@@ -176,6 +178,7 @@ public class DataCollectorsPanel extends JPanel implements XMLConfigurable {
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(SackinsVariance.identifier), darkColor);
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(CollessIndex.identifier), lightColor);
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(NumBreakPoints.identifier), darkColor);
+		addSingleDataCollectorItem((Statistic)sReg.getInstance(TMRCADensity.identifier), lightColor);	
 		
 		addSeparator("Fitness statistics");
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(MeanFitness.identifier), darkColor);
@@ -196,8 +199,8 @@ public class DataCollectorsPanel extends JPanel implements XMLConfigurable {
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(TajimasD.identifier), lightColor);
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(DStar.identifier), darkColor);
 		addSingleDataCollectorItem((Statistic)sReg.getInstance(FStar.identifier), lightColor);
-		
-		addSingleDataCollectorItem((Statistic)sReg.getInstance(FrequencySpectrum.identifier), darkColor);
+		addSingleDataCollectorItem((Statistic)sReg.getInstance(BreakpointDensity.identifier), darkColor);		
+		addSingleDataCollectorItem((Statistic)sReg.getInstance(FrequencySpectrum.identifier), lightColor);
 		
 		
 		addSeparator("Utilities");
