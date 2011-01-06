@@ -7,6 +7,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
+import javax.xml.stream.XMLStreamReader;
 
 
 import treesimj.SerializablePrintStream;
@@ -434,6 +435,36 @@ public abstract class Statistic extends XMLParseable implements Serializable {
 		  }
 
 		  return hist;
+	}
+	
+	/**
+	 * This is called to set various user-configurable options, such as collection frequency and 
+	 * histogram properties, from stored XML. This is the default version, which reads in sampleFrequency,
+	 * histoBins, histoMin, and histoMax properties. If your statistic has other properties that are
+	 * user-configurable and stored in the XML settings file, you should override this method
+	 * in your statistic to handle them properly. See TMRCADensity for an example of this. 
+	 * @param reader
+	 */
+	public void configureSettings(XMLStreamReader reader) {
+		String collectionFreq = XMLParseable.Utils.getAttributeForKey(reader, TJXMLConstants.SAMPLEFREQUENCY); 
+		if (collectionFreq != null) {
+			this.setSampleFrequency(Integer.parseInt(collectionFreq));
+		}
+		
+		String histoBins = XMLParseable.Utils.getAttributeForKey(reader, TJXMLConstants.HISTOBINS); 
+		if (histoBins != null) {
+			this.setUserHistoBins(Integer.parseInt(histoBins));
+		}
+		
+		String histoMin = XMLParseable.Utils.getAttributeForKey(reader, TJXMLConstants.HISTOMIN);
+		if (histoMin != null) {
+			this.setUserHistoMin(Double.parseDouble(histoMin));
+		}
+		
+		String histoMax = XMLParseable.Utils.getAttributeForKey(reader, TJXMLConstants.HISTOMAX); 
+		if (histoMax != null) {
+			this.setUserHistoMax(Double.parseDouble(histoMax));
+		}
 	}
 
 

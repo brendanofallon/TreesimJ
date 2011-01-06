@@ -343,25 +343,9 @@ public class DataCollectorsPanel extends JPanel implements XMLConfigurable {
 					selectStat(statType);
 					
 					Statistic stat = getStatForId(statType);
-					String collectionFreq = XMLParseable.Utils.getAttributeForKey(reader, TJXMLConstants.SAMPLEFREQUENCY); 
-					if (collectionFreq != null) {
-						stat.setSampleFrequency(Integer.parseInt(collectionFreq));
-					}
 					
-					String histoBins = XMLParseable.Utils.getAttributeForKey(reader, TJXMLConstants.HISTOBINS); 
-					if (histoBins != null) {
-						stat.setUserHistoBins(Integer.parseInt(histoBins));
-					}
-					
-					String histoMin = XMLParseable.Utils.getAttributeForKey(reader, TJXMLConstants.HISTOMIN);
-					if (histoMin != null) {
-						stat.setUserHistoMin(Double.parseDouble(histoMin));
-					}
-					
-					String histoMax = XMLParseable.Utils.getAttributeForKey(reader, TJXMLConstants.HISTOMAX); 
-					if (histoMax != null) {
-						stat.setUserHistoMax(Double.parseDouble(histoMax));
-					}
+					//Allow the statistic to configure its own settings from the XML. 
+					stat.configureSettings(reader); 
 
 				}
 

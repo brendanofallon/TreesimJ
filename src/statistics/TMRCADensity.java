@@ -4,12 +4,17 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JFrame;
+import javax.xml.stream.XMLStreamReader;
+
 import fitnessProviders.DNAFitness;
 import fitnessProviders.FitnessProvider;
 
 import population.Locus;
 import population.Recombineable;
 import tree.DiscreteGenTree;
+import xml.TJXMLConstants;
+import xml.XMLParseable;
 
 /**
  * This class collects the TMRCA of a sample as a function of position along a DNA sequence. 
@@ -24,9 +29,10 @@ import tree.DiscreteGenTree;
  */
 public class TMRCADensity extends TreeStatistic {
 
+	public static final String TMRCA_BIN_WIDTH = "bin.width";
 	public static final String identifier = "TMRCA Density map";
 	
-	int numHistos = 20;
+	int histoBinWidth = 50;
 	int histoBins = 50;
 	int binSize = 100;
 	//Max depth tracked will be histoBins * binSize, which will be 5000 here. This must be made user-configurable
@@ -44,7 +50,7 @@ public class TMRCADensity extends TreeStatistic {
 		}
 		
 		int histoIndex = 0;
-		int seqSpacing = seqLength / numHistos;
+		int seqSpacing = histoBinWidth;
 		out.println(" Site range \t Mean TMRCA \t Stdev. TMRCA");
 		for(int site=0; site<seqLength; site += seqSpacing) {
 			out.println(site + " - " + (site+seqSpacing-1) + " : \t" + histos[histoIndex].getMean() + "\t" + histos[histoIndex].getStdev());
@@ -55,24 +61,25 @@ public class TMRCADensity extends TreeStatistic {
 	
 	public void clear() {
 		seqLength = null;
-		if (histos != null) {
-			for(int i=0; i<histos.length; i++) {
-				histos[i].clear();
-			}
-		}
+		histos = null;
+	}
+	
+	public int getBinWidth() {
+		return histoBinWidth;
+	}
+	
+	/**
+	 * Returns a GUI component that allows the user to configure some options of this statistic
+	 * @return
+	 */
+	public JFrame getConfigurationTool() {
+		return new TMRCADensityConfigurator(this);
 	}
 	
 	@Override
 	public void collect(DiscreteGenTree tree) {
 		if (tree==null)
 			return;
-		
-		if (histos == null) {
-			histos = new Histogram[numHistos];
-			for(int i=0; i<numHistos; i++) {
-				histos[i] = new Histogram(histoBins, 0, binSize);
-			}
-		}
 		
 		FitnessProvider fitnessData = tree.getTips().get(0).getFitnessData();
 		if (! (fitnessData instanceof DNAFitness)) {
@@ -82,9 +89,18 @@ public class TMRCADensity extends TreeStatistic {
 		if (seqLength==null)
 			seqLength = ((DNAFitness)fitnessData).getLength();
 		
+		if (histos == null) {
+			int numHistos = (int)Math.ceil( (double)seqLength / (double)histoBinWidth);
+			histos = new Histogram[numHistos];
+			for(int i=0; i<numHistos; i++) {
+				histos[i] = new Histogram(histoBins, 0, binSize);
+			}
+		}
+
+
+		
 		int histoIndex = 0;
-		int seqSpacing = seqLength / numHistos;
-		for(int site=0; site<seqLength; site += seqSpacing) {
+		for(int site=0; site<seqLength; site += histoBinWidth) {
 			int tmrca = getTMRCAForSite(tree, site);
 			histos[histoIndex].addValue(tmrca);
 			histoIndex++;
@@ -141,6 +157,28 @@ public class TMRCADensity extends TreeStatistic {
 	@Override
 	public String getDescription() {
 		return "TMRCA as a function of position along the sequence";
+	}
+
+	public void setUserHistoBinWidth(Integer width) {
+		histoBinWidth = width;
+		addXMLAttr(TMRCA_BIN_WIDTH, String.valueOf(width));
+	}
+	
+	/**
+	 * This statistic doesn't have the usual histogram properties that most statistics do, we still use
+	 * sampleFrequency, but the only other option is the 'bin width'
+	 */
+	public void configureSettings(XMLStreamReader reader) {
+		String collectionFreq = XMLParseable.Utils.getAttributeForKey(reader, TJXMLConstants.SAMPLEFREQUENCY); 
+		if (collectionFreq != null) {
+			this.setSampleFrequency(Integer.parseInt(collectionFreq));
+		}
+		
+		String histoBinWidth = XMLParseable.Utils.getAttributeForKey(reader, TMRCA_BIN_WIDTH); 
+		if (histoBinWidth != null) {
+			this.setUserHistoBinWidth(Integer.parseInt(histoBinWidth));
+		}
+		
 	}
 
 }
