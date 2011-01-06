@@ -47,6 +47,11 @@ public class SerialPairwiseCTime extends TreeStatistic {
 	}
 
 	
+	public void clear() {
+		histoDiff.clear();
+		histoSame.clear();
+	}
+	
 	public void setPopSize(int N) {
 		popSize = N;
 	}

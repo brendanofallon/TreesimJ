@@ -38,6 +38,11 @@ public class FrequencySpectrum extends DNAStatistic {
 		return false;
 	}
 	
+	public void clear() {
+		spectrum = new ArrayList<Double>();
+		calls = 0;
+	}
+	
 	@Override
 	public void collect(Collectible pop) {
 		calls++;

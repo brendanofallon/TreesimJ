@@ -59,6 +59,12 @@ public class BranchRateStatistic extends TreeStatistic {
 	}
 	
 	
+	public void clear() {
+		rateHisto = new ArrayList<Pair>();
+		fitHisto = new ArrayList<Pair>();
+		calls = 0;
+	}
+	
 	/**
 	 * True if a configuration tool is available for this statistic
 	 * @return
