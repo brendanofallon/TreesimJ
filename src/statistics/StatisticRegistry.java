@@ -77,6 +77,7 @@ public class StatisticRegistry {
 		add(new AbsoluteFitnessDistro());
 		add(new NumBreakPoints());
 		add(new NodeCount());
+		add(new BreakpointDensity());
 	}
 	
 	public Statistic getInstance(String id) {
