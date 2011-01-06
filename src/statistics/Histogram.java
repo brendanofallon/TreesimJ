@@ -51,6 +51,7 @@ public class Histogram implements Serializable {
 		moreThanMax = 0;
 		lessThanMin = 0;
 		currentSum = 0;
+		currentStdev = 0;
 	}
 	
 	public void addValue(double val) {

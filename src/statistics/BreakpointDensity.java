@@ -28,6 +28,15 @@ public class BreakpointDensity extends TreeStatistic {
 		return identifier;
 	}
 
+	/**
+	 * Important! We must make sure that we clear the histogram when this is called, otherwise consecutive runs
+	 * will end up combining values with previous runs! 
+	 */
+	public void clear() {
+		if (histo != null)
+			histo.clear();
+	}
+	
 	@Override
 	public void collect(DiscreteGenTree tree) {
 		if (tree == null)

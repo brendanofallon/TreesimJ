@@ -53,6 +53,15 @@ public class TMRCADensity extends TreeStatistic {
 		
 	}
 	
+	public void clear() {
+		seqLength = null;
+		if (histos != null) {
+			for(int i=0; i<histos.length; i++) {
+				histos[i].clear();
+			}
+		}
+	}
+	
 	@Override
 	public void collect(DiscreteGenTree tree) {
 		if (tree==null)
@@ -111,8 +120,9 @@ public class TMRCADensity extends TreeStatistic {
 		List<Locus> parents = new ArrayList<Locus>(sample.size());
 		
 		for(Locus kid : sample) {
-			if (! parents.contains(kid.getParentForSite(site))) {
-				parents.add(kid.getParentForSite(site));
+			Locus parent = kid.getParentForSite(site);
+			if (! parents.contains(parent)) {
+				parents.add(parent);
 			}
 		}
 		return parents;
