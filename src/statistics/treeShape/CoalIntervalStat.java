@@ -30,6 +30,11 @@ public class CoalIntervalStat extends TreeStatistic {
 		intervalHistos = new ArrayList<Histogram>();
 	}
 	
+	public void clear() {
+		if (intervalHistos != null)
+			intervalHistos.clear();
+	}
+	
 	public void collect(DiscreteGenTree tree) {
 		if (tree==null)
 			return;
