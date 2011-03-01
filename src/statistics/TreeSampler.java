@@ -1,6 +1,7 @@
 package statistics;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import population.Population;
 
@@ -18,7 +19,7 @@ import tree.DiscreteGenTree;
 public abstract class TreeSampler extends Statistic {
 
 	
-	ArrayList<TreeCollectionListener> treeListeners;
+	List<TreeCollectionListener> treeListeners;
 	
 	/**
 	 * Add the treeCollectionListener to the list of listeners to be notified when a new tree

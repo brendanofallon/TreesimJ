@@ -57,6 +57,11 @@ public class Histogram implements Serializable {
 	public void addValue(double val) {
 		double prevMean = getMean(); //Needed to compute running stdev
 		count++;
+		
+		currentSum += val; 
+		if (count>1)
+			currentStdev += (val-prevMean)*(val-getMean());
+		
 		if (val<minValue) {
 			lessThanMin++;
 			return;
@@ -66,9 +71,7 @@ public class Histogram implements Serializable {
 			return;
 		}
 		
-		currentSum += val; 
-		if (count>1)
-			currentStdev += (val-prevMean)*(val-getMean());
+
 		hist[ (int)Math.floor( (val-minValue)/(maxValue-minValue)*(double)hist.length ) ]++;
 	}
 	

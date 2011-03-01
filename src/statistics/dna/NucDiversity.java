@@ -83,38 +83,22 @@ public class NucDiversity extends DNAStatistic {
 			}
 		}
 		
-		freqs[0] /= (double)sample.size();
-		freqs[1] /= (double)sample.size();
-		freqs[2] /= (double)sample.size();
-		freqs[3] /= (double)sample.size();
 		
-		double sum = (1.0 - freqs[0]*freqs[0] - freqs[1]*freqs[1] - freqs[2]*freqs[2] - freqs[3]*freqs[3]);
+		double s0 = (double)sample.size();
+		double s1 = (double)sample.size()-1;
+
+		freqs[0] = freqs[0]/s0 * (freqs[0]-1)/s1;
+		freqs[1] = freqs[1]/s0 * (freqs[1]-1)/s1;
+		freqs[2] = freqs[2]/s0 * (freqs[2]-1)/s1;
+		freqs[3] = freqs[3]/s0 * (freqs[3]-1)/s1;		
 		
+		double sum = (1.0 - freqs[0] - freqs[1] - freqs[2] - freqs[3]);
+		if (sum < 0 || sum > 1.0) {
+			throw new IllegalStateException("Error calculating site diversity for site: " + site + ", frequency is: " + sum);
+		}
 		return sum;
 	}
-	
-	
-//	private double[] getSiteDiversityFromInheritables(Population pop, int index, int site) {
-//		double[] freqs = new double[4];
-//
-//		
-//		for(int i=0; i<sampleSize; i++) {
-//			switch( ((DNASequence)pop.getInd(i).getInheritable(index)).getBaseChar(site) ) {
-//			case 'A' : freqs[0]++; break;
-//			case 'G' : freqs[1]++; break;
-//			case 'C' : freqs[2]++; break;
-//			case 'T' : freqs[3]++; break;
-//			}
-//
-//		}
-//
-//		freqs[0] /= (double)maxInd;
-//		freqs[1] /= (double)maxInd;
-//		freqs[2] /= (double)maxInd;
-//		freqs[3] /= (double)maxInd;
-//		
-//		return freqs;
-//	}
+
 	
 	public String getDescription() {
 		return "The mean number of sites at which two randomly selected sequences differ";
