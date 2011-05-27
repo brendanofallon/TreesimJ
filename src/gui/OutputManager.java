@@ -2,6 +2,7 @@ package gui;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -12,7 +13,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -55,17 +59,18 @@ import fitnessProviders.FitnessProvider;
  */
 public class OutputManager implements Serializable {
 
-	protected ArrayList<SerializablePrintStream> streams; //Print log files to these streams
-	protected SerializablePrintStream summaryStream;		//Print summary to this stream
+	protected ArrayList<PrintStream> streams; //Print log files to these streams
+	Map<String, PrintStream> logFiles = new HashMap<String, PrintStream>(); //List of file names that we write log info to, each will have an associated stream.
+	protected PrintStream summaryStream;		//Print summary to this stream
 	
-	protected SerializablePrintStream treesStream = null;		//Trees are written, in newick form, to this stream
+	protected PrintStream treesStream = null;		//Trees are written, in newick form, to this stream
 	
 	protected boolean writeFasta = false;			//True if any writing of DNA is to happen
 	protected boolean writeSeparateFastas = false;
 	protected boolean writeTreesWithFasta = false;
 
 
-	protected SerializablePrintStream fastaStream = null;
+	protected PrintStream fastaStream = null;
 	protected String fastaFileStem = "";			//File stem to use for fasta file writing
 	protected int fastasWritten = 0;				//Total number of fasta files written, if writing separate fasta files
 	
@@ -79,6 +84,7 @@ public class OutputManager implements Serializable {
 	protected DemographicModel demoModel = null; //This is just used to get the current generation number
 	
 	protected int repeatNumber = 0; //Experimental, not currently in use
+	protected int treeCount = 0;
 	
 	protected TreeWriter treeWriter = new GraphMLWriter(); 
 	
@@ -87,16 +93,33 @@ public class OutputManager implements Serializable {
 	
 	public OutputManager(DemographicModel demoModel) {
 		this.demoModel = demoModel;
-		streams = new ArrayList<SerializablePrintStream>();
+		streams = new ArrayList<PrintStream>();
 		statList = new ArrayList<Statistic>();
 		globalOutputHandler = this;
 	}
+	
+	public void addLogFile(File logFile) throws FileNotFoundException {
+		PrintStream ps;
+		ps = new PrintStream(logFile);
+		
+
+		
+		String fileStem = logFile.getAbsolutePath();
+		int index = logFile.getAbsolutePath().lastIndexOf(".");
+		if (index > 0)
+			fileStem = logFile.getAbsolutePath().substring(0, index);
+	
+		
+		logFiles.put(fileStem, ps);
+		addStream(ps);
+	}
+	
 	
 	/**
 	 * Add a new stream to the list of streams to write output to
 	 * @param newStream
 	 */
-	public void addStream(SerializablePrintStream newStream) {
+	public void addStream(PrintStream newStream) {
 		if (! streams.contains(newStream)) {
 			streams.add(newStream);
 		}
@@ -127,7 +150,7 @@ public class OutputManager implements Serializable {
 	 * A a new stream for summary writing
 	 * @param filePS
 	 */
-	public void setSummaryStream(SerializablePrintStream filePS) {
+	public void setSummaryStream(PrintStream filePS) {
 		summaryStream = filePS;
 	}
 	
@@ -150,7 +173,7 @@ public class OutputManager implements Serializable {
 		fastaFilestem = fastaFilestem + ".fas";
 		File fastaFile = new File(fastaFilestem);
 		try {
-			fastaStream = new SerializablePrintStream(fastaFile);
+			fastaStream = new PrintStream(fastaFile);
 		}
 		catch (IOException ioe) {
 			fastaStream = null;
@@ -235,7 +258,7 @@ public class OutputManager implements Serializable {
 		}
 		
 		String dateLine = "# TreeSimJ run initiated at : " + DateFormat.getInstance().format(new Date());
-		for(SerializablePrintStream stream : streams) {
+		for(PrintStream stream : streams) {
 			stream.println(dateLine);
 			stream.println(header);
 		}
@@ -251,7 +274,30 @@ public class OutputManager implements Serializable {
 	 * @param num
 	 */
 	public void setRepeatNumber(int num) {
-		repeatNumber = num;
+		if (num != repeatNumber) {
+			repeatNumber = num;	
+			
+			Set<String> fileStems = logFiles.keySet();
+			String suffix = "_#" + repeatNumber;
+			for(String stem : fileStems) {
+				PrintStream streamToReplace = logFiles.get(stem);
+				if (streamToReplace != null) {
+					streamToReplace.close(); //Close the old stream
+					streams.remove( streamToReplace );
+					String newFileName = stem + suffix + ".log";
+					
+					try {
+						PrintStream ps = new PrintStream(new File(newFileName));
+						System.out.println("Adding new stream associated with file: " + newFileName);
+						streams.add(ps);
+					} catch (FileNotFoundException e) {
+						System.err.println( e.getMessage() );
+						e.printStackTrace();
+						//Why are these ever thrown? We don't expect files to exist before writing to them?
+					}
+				}
+			}
+		}
 	}
 	
 	/**
@@ -262,6 +308,7 @@ public class OutputManager implements Serializable {
 	public void writeTreesAndFasta(DiscreteGenTree tree) {
 		
 		if (writeFasta) {
+			treeCount++;
 			fastasWritten++;
 			if (writeSeparateFastas) {
 				String rNum = "";
@@ -270,21 +317,12 @@ public class OutputManager implements Serializable {
 				
 				System.out.println("Writing fasta file on generation " + String.valueOf(demoModel.getCurrentGenNumber()));
 				
-				String fastaFileName = fastaFileStem + /*"_g" + String.valueOf(demoModel.getCurrentGenNumber()) + rNum + */ ".fas";
-				String treeFileName = fastaFileStem +  /* "_tree_g" + String.valueOf(demoModel.getCurrentGenNumber()) + rNum + */ treeWriter.getSuffix();
+				String fastaFileName = fastaFileStem + "_" + treeCount + rNum + ".fas";
 				File fastaFile = new File(fastaFileName);
-				//File treeFile = new File(treeFileName);
-				int count = 0;
-				while (fastaFile.exists()) {
-					count++;
-					fastaFileName = fastaFileStem + "_" + count + ".fas";
-					fastaFile = new File(fastaFileName);
-					treeFileName =  fastaFileStem + "_" + count + treeWriter.getSuffix();
-					//treeFile = new File(treeFileName);
-				}
+				String treeFileName =  fastaFileStem + "_" + treeCount + rNum + ".xml";
 				
 				try {
-					fastaStream = new SerializablePrintStream(fastaFile);
+					fastaStream = new PrintStream(fastaFile);
 					
 					if (writeTreesWithFasta) {
 						BufferedWriter buf = new BufferedWriter(new FileWriter(treeFileName));
@@ -296,7 +334,7 @@ public class OutputManager implements Serializable {
 					System.err.println("Could not write fasta/tree to file : " + ioe);
 				}
 			}
-
+			
 			String fasta = getFastaFromTreeTips(tree);
 			fastaStream.println();
 			fastaStream.print(fasta);
@@ -323,7 +361,7 @@ public class OutputManager implements Serializable {
 			}
 		}
 
-		for(SerializablePrintStream stream : streams) {
+		for(PrintStream stream : streams) {
 			stream.println(line);
 		}
 		
@@ -389,8 +427,8 @@ public class OutputManager implements Serializable {
 	 */
 	public void writeSummaries() {
 		PrintStream sysOut = null;
-		for(SerializablePrintStream stream : streams) {
-			if (stream.isSystemOut())
+		for(PrintStream stream : streams) {
+			if (stream == System.out)
 				sysOut = System.out;
 		}
 		
@@ -427,7 +465,7 @@ public class OutputManager implements Serializable {
 		
 		for(Statistic stat : statList) {
 			summaryStream.println("\n\n Final summary for statistic : " + stat.getIdentifier());
-			stat.summarize(summaryStream.getPrintStream());
+			stat.summarize(summaryStream);
 			
 			if (sysOut != null) {
 				sysOut.println("\n\n Final summary for statistic : " + stat.getIdentifier());
@@ -454,7 +492,7 @@ public class OutputManager implements Serializable {
 	 * Stream to write tree info to
 	 * @param filePS
 	 */
-	public void setTreesStream(SerializablePrintStream filePS) {
+	public void setTreesStream(PrintStream filePS) {
 		treesStream = filePS;
 	}
 

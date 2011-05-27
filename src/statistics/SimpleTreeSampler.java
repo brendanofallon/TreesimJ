@@ -2,10 +2,12 @@ package statistics;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.List;
 
 import population.Locus;
 
 import tree.DiscreteGenTree;
+import treesimj.TreesimJView;
 
 
 /**
@@ -64,26 +66,39 @@ public class SimpleTreeSampler extends TreeSampler {
 		calls++;
 		lastTree = null;
 		
-		DiscreteGenTree tree = pop.getSampleTree(sampleSize);
-		//DiscreteGenTree tree = new DiscreteGenTree(root);
-		lastTree = tree;
-		ArrayList<Double> nodeTimes = tree.getNodeTimes();
-
-		values.add(nodeTimes.get(nodeTimes.size()-1));
-		if (nodeTimes.size() != sampleSize-1) {
-			//System.err.println("Uh-oh, didn't get exactly samplesize-1 coalescent interval times (got " + nodeTimes.size() + ")\n");
-		} 
-		else  {
-			//System.out.println("times size : " + times.size() + " node times size: " + nodeTimes.size() + " samplesize-1  : " + (sampleSize-1));
-			for(int i=0; i<sampleSize-1; i++) {
-				times.set(i, times.get(i)+nodeTimes.get(i));
+		if (! TreesimJView.storeAncestry) {
+			List<Locus> inds = pop.getSample(sampleSize);
+			Locus fakeRoot = new Locus(rng);
+			for(Locus ind : inds) {
+				fakeRoot.addOffspring(ind);
+				ind.setParent(fakeRoot);
 			}
-			ctimesCounted++;
+			DiscreteGenTree tree = new DiscreteGenTree(fakeRoot, inds);
+			lastTree = tree;
+			treesCounted++;
 		}
+		else {
+			DiscreteGenTree tree = pop.getSampleTree(sampleSize);
+			//DiscreteGenTree tree = new DiscreteGenTree(root);
+			lastTree = tree;
+			ArrayList<Double> nodeTimes = tree.getNodeTimes();
 
-		treesCounted++;
+			values.add(nodeTimes.get(nodeTimes.size()-1));
+			if (nodeTimes.size() != sampleSize-1) {
+				//System.err.println("Uh-oh, didn't get exactly samplesize-1 coalescent interval times (got " + nodeTimes.size() + ")\n");
+			} 
+			else  {
+				//System.out.println("times size : " + times.size() + " node times size: " + nodeTimes.size() + " samplesize-1  : " + (sampleSize-1));
+				for(int i=0; i<sampleSize-1; i++) {
+					times.set(i, times.get(i)+nodeTimes.get(i));
+				}
+				ctimesCounted++;
+			}
 
-		popSize = pop.size();
+			treesCounted++;
+
+			popSize = pop.size();
+		}
 	}
 	
 	public void emitMeanCoalTimes() {

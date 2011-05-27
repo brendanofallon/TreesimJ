@@ -129,7 +129,10 @@ public class Locus implements Serializable, Comparable {
 	
 	public String getReadableID() {
 		StringBuffer buf = new StringBuffer("i");
-		String num = String.valueOf(Math.abs(id)).substring(0, 5);
+		String num = String.valueOf(Math.abs(id));
+		if (num.length()>5)
+				num = num.substring(0, 5);
+		
 		buf.append(num);
 		if (originPop>-1) {
 			buf.append("_p" + String.valueOf(originPop));

@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -93,10 +94,16 @@ public class TreesimJView extends JFrame implements DoneListener, ProgressListen
 		
 	//Where we store the settings from the last run
 	private static final String settingsFromLastRun = ".tj_lastrunsettings.xml";
-
-	//A flag that indicates the appropriate action when the Run Simulation button is pressed
-	private boolean startFromLoadedPopulation = false;
-
+	
+	public static final boolean storeAncestry = false;
+	
+	//Used to keep track of which "repeat" of the same simulation settings we're on
+	private int totalRepeatNumber = 1;
+	private int currentRepeatNumber = 0;
+	
+	
+	//More-or-less global random number source
+	RandomEngine rng = null;
 	
     public TreesimJView(Properties props) {
         super("TreesimJ");
@@ -251,7 +258,7 @@ public class TreesimJView extends JFrame implements DoneListener, ProgressListen
 			outputHandler.addStatistic(stat);
 
 		if (runSettingsPanel.writeToStdout()) {
-			outputHandler.addStream(new SerializablePrintStream(System.out));
+			outputHandler.addStream(System.out);
 		}
 
 		if (runSettingsPanel.writeToFile()) {
@@ -276,8 +283,7 @@ public class TreesimJView extends JFrame implements DoneListener, ProgressListen
 			
 			if (outputFile != null) {
 				try {
-					SerializablePrintStream filePS = new SerializablePrintStream(outputFile);
-					outputHandler.addStream(filePS);
+					outputHandler.addLogFile(outputFile);
 				} catch (FileNotFoundException e) {
 
 					JOptionPane.showMessageDialog(this,
@@ -298,7 +304,6 @@ public class TreesimJView extends JFrame implements DoneListener, ProgressListen
 				if (retVal == JFileChooser.APPROVE_OPTION) {
 					outputFile = fileChooser.getSelectedFile();
 
-
 				}
 				else {
 					System.out.println("Not adding any file to output list.");
@@ -309,7 +314,7 @@ public class TreesimJView extends JFrame implements DoneListener, ProgressListen
 				outputFile = new File(filename);
 				
 				try {
-					SerializablePrintStream filePS = new SerializablePrintStream(outputFile);
+					PrintStream filePS = new PrintStream(outputFile);
 					outputHandler.setSummaryStream(filePS);
 					
 				} catch (FileNotFoundException e) {
@@ -330,7 +335,7 @@ public class TreesimJView extends JFrame implements DoneListener, ProgressListen
 			outputFile = new File(filename);
 			
 			try {
-				SerializablePrintStream filePS = new SerializablePrintStream(outputFile);
+				PrintStream filePS = new PrintStream(outputFile);
 				outputHandler.setTreesStream(filePS);
 			} catch (FileNotFoundException e) {
 
@@ -392,7 +397,11 @@ public class TreesimJView extends JFrame implements DoneListener, ProgressListen
 		pauseButton.setEnabled(true);
 		runButton.setEnabled(false);
 		stopButton.setEnabled(true);
-		statusLabel.setText("Running");
+		if (totalRepeatNumber == 1)
+			statusLabel.setText("Running");
+		else 
+			statusLabel.setText("Running " + (currentRepeatNumber+1) + "/" + totalRepeatNumber);
+		
 		progressBar.setVisible(true);
 		
 		int burninGens = runSettingsPanel.getBurninGens();
@@ -449,6 +458,10 @@ public class TreesimJView extends JFrame implements DoneListener, ProgressListen
 					((DNAStatistic)stat).setSampleSize(dnaSampleSize);
 				}
 				
+				if (stat.requiresGenealogy() && !storeAncestry) {
+					throw new ClassCastException("Requires genealogy, but we're not tracking it");
+				}
+				
 				stat.setRandomEngine(rng);
 				stats.add(stat);
 			}
@@ -487,57 +500,25 @@ public class TreesimJView extends JFrame implements DoneListener, ProgressListen
 	 * 
 	 */
 	public void beginSimulationFromGUI(boolean runInForeground) {
-
-		if (startFromLoadedPopulation) { //This flag gets set if we're starting from a stored simulation state
-			//When starting from a stored state, we can elect to have different data collectors and run options, or use the
-			//same as from the stored state. We ask the user what they'd like to do here, 
-//			Object[] options = {"Saved options",
-//			"New options"};
-//			int n = JOptionPane.showOptionDialog(ths,
-//					"Would you like to use the same run settings and data collectors as the saved population, or use the currently selected options?",
-//					"Load new options",
-//					JOptionPane.YES_NO_OPTION,
-//					JOptionPane.QUESTION_MESSAGE,
-//					null,
-//					options,
-//					options[0]);
-
-			//If the user wants to use the new options, then we constuct a new stat list and new output handler and set the runner to
-			//use these. Otherwise, the runner is already initialized with the previous values, so we do nothing. 
-//			if (true) {
-//				int rngSeed = runSettingsPanel.getRandomSeed();
-//				RandomEngine rng = new MersenneTwister( rngSeed );
-//
-//				ArrayList<Statistic> stats = constructStatisticList(rng, runner.getPopulation().getFitnessModel());
-//				runner.getPopulation().setCurrentGenNumber(0);
-//				runner.getPopulation().setRandomEngine(rng);
-//				for(Individual ind : runner.getPopulation().getList()) {
-//					ind.getFitnessData().setRandomEngine(rng);
-//				}
-//				OutputManager outputHandler = constructOutputManager(stats, runner.getPopulation());
-//				outputHandler.constructSummaryHeader(runner.getPopulation().getFitnessModel(), runner.getDemographicModel(), runSettingsPanel);
-//				
-//				
-//				runner.setOutputHandler(outputHandler);
-//			}
-//			
-//			startRunner(runInForeground);
-//			startFromLoadedPopulation = false;
-			return;
-		}
+	
+		totalRepeatNumber = runSettingsPanel.getRepeats();
+		if (totalRepeatNumber > 1)
+			statusLabel.setText("Running " + currentRepeatNumber + "/" + totalRepeatNumber);
+		else
+			statusLabel.setText("Running");
 		
 		if (runner!=null && runner.isPaused()) {
 			pauseButton.setEnabled(true);
 			stopButton.setEnabled(true);
 			runButton.setEnabled(false);
-			statusLabel.setText("Running");
 			runner.resume();
 		}
 		else {
-			
-			int rngSeed = runSettingsPanel.getRandomSeed();
-			RandomEngine rng = new MersenneTwister( rngSeed );
-			
+				
+			 if (rng == null || currentRepeatNumber == 0) {
+				 int rngSeed = runSettingsPanel.getRandomSeed();
+				 rng = new MersenneTwister( rngSeed );
+			 }
 			
 			Population.resetTotalPopCount();
 			boolean preserveAncestralDNAData = false; 
@@ -550,9 +531,11 @@ public class TreesimJView extends JFrame implements DoneListener, ProgressListen
 			for(Statistic stat : stats) 
 				preserveAncestralDNAData = preserveAncestralDNAData || stat.requiresPreserveAncestralData();
 		
-			//If we wanted to run multiple repeats, we could do it here
-			//but we'd have to work out some way of ensuring that there's only X number of population runners going at once...
-			//int repeats = runSettingsPanel.getRepeats();
+			//Remember to clear all stats before use, but not if we're in the middle of multiple repeated runs
+			if (currentRepeatNumber == 0) {
+				for(Statistic stat : stats)
+					stat.clear();
+			}
 			
 			DemographicModel demoModel = demoModelPanel.constructDemographicModel();
 			demoModel.setRng(rng);
@@ -563,15 +546,59 @@ public class TreesimJView extends JFrame implements DoneListener, ProgressListen
 			}
 
 			OutputManager outputHandler = constructOutputManager(stats, demoModel);
-			//outputHandler.setRepeatNumber(i);
+			outputHandler.setRepeatNumber( currentRepeatNumber );
 
 			runner = new PopulationRunner(demoModel, outputHandler);
 			runner.addProgressListener(this);	//We'd need know the progress of the simulation to update the progress bar
 
 			outputHandler.constructSummaryHeader(fitnessModel, runner.getDemographicModel(), runSettingsPanel);			
 			startRunner(runInForeground);
-			
 		}
+//		if (runner!=null && runner.isPaused()) {
+//			pauseButton.setEnabled(true);
+//			stopButton.setEnabled(true);
+//			runButton.setEnabled(false);
+//			statusLabel.setText("Running");
+//			runner.resume();
+//		}
+//		else {
+//			
+//			int rngSeed = runSettingsPanel.getRandomSeed();
+//			RandomEngine rng = new MersenneTwister( rngSeed );
+//			
+//			
+//			Population.resetTotalPopCount();
+//			boolean preserveAncestralDNAData = false; 
+//			
+//			
+//			FitnessProvider fitnessModel = fitnessModelPanel.constructFitnessModel(rng);
+//			
+//			ArrayList<Statistic> stats = constructStatisticList(rng, fitnessModel);
+//
+//			for(Statistic stat : stats) 
+//				preserveAncestralDNAData = preserveAncestralDNAData || stat.requiresPreserveAncestralData();
+//		
+//			//If we wanted to run multiple repeats, we could do it here
+//			//but we'd have to work out some way of ensuring that there's only X number of population runners going at once...
+//			//int repeats = runSettingsPanel.getRepeats();
+//			
+//			DemographicModel demoModel = demoModelPanel.constructDemographicModel();
+//			demoModel.setRng(rng);
+//			demoModel.initializePopulations(rng, fitnessModel);
+//
+//			for(Population pop : demoModel.getPopList()) {
+//				pop.setPreserveData(preserveAncestralDNAData);
+//			}
+//
+//			OutputManager outputHandler = constructOutputManager(stats, demoModel);
+//			//outputHandler.setRepeatNumber(i);
+//
+//			runner = new PopulationRunner(demoModel, outputHandler);
+//			runner.addProgressListener(this);	//We'd need know the progress of the simulation to update the progress bar
+//
+//			outputHandler.constructSummaryHeader(fitnessModel, runner.getDemographicModel(), runSettingsPanel);			
+//			startRunner(runInForeground);
+
 	}
 
 	
@@ -936,6 +963,19 @@ public class TreesimJView extends JFrame implements DoneListener, ProgressListen
 		runButton.setEnabled(true);
 		pauseButton.setEnabled(false);
 		stopButton.setEnabled(false);
+		System.out.println("Done is being called");
+		if (runner.hasCompleted()) {
+			currentRepeatNumber++;
+			System.out.println("Runner has completed, incrementing current repeat # to : " + currentRepeatNumber);
+			if (currentRepeatNumber < totalRepeatNumber) {
+				System.out.println("Doing more repeats!");
+				beginSimulationFromGUI(DEBUG);
+			}
+			else {
+				System.out.println("Apparently repeats are done, ending");
+				currentRepeatNumber = 0;
+			}
+		}
 	}
 
 
