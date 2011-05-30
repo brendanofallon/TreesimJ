@@ -48,6 +48,19 @@ public class GraphMLWriter implements TreeWriter {
 		
 	}
 	
+	/**
+	 * Converts the given number to the same format that the OutputManager uses to identify sequences, so we 
+	 * can easily associate tips in an ARG with sequence 
+	 * @param id
+	 * @return
+	 */
+	private static String convertID(GraphNode node) {
+		if (node.height > 0)
+			return "" + node.id;
+		else
+			return String.valueOf("i" + Math.abs(node.id)).substring(0, 6);
+	}
+	
 	private String getString(GraphDecomposer decomp, int length) {
 		List<GraphNode> nodes = decomp.getNodes();
 		List<Branch> edges = decomp.getEdges();
@@ -57,14 +70,14 @@ public class GraphMLWriter implements TreeWriter {
 		//System.out.println("<" + XML_SECTION + ">");
 	
 		for(GraphNode node : nodes) {
-			strBuf.append("\t <" + XML_NODE + " id=\"" + node.id + "\" height=\"" + node.height + "\"/>\n");
+			strBuf.append("\t <" + XML_NODE + " id=\"" + convertID(node) + "\" height=\"" + node.height + "\"/>\n");
 			//System.out.println("\t <" + XML_NODE + " id=\"" + node.id + "\" height=\"" + node.height + "\"/>");
 		}
 		
 		int edgeCount = 1;
 		for(Branch edge : edges) {
 			if (edge.hasRange()) {
-				strBuf.append("\t <" + XML_EDGE + " id=\"branch" + edgeCount + "\" source=\"" + edge.source.id + "\" target=\"" + edge.target.id + "\" >\n");
+				strBuf.append("\t <" + XML_EDGE + " id=\"branch" + edgeCount + "\" source=\"" + convertID(edge.source) + "\" target=\"" + convertID(edge.target) + "\" >\n");
 				strBuf.append("\t \t <" + XML_RANGE + ">\n");
 				strBuf.append("\t \t \t <" + XML_START + "> " + edge.rangeMin + " </" + XML_START + ">\n");
 				strBuf.append("\t \t \t <" + XML_END + "> " + edge.rangeMax + " </" + XML_END + ">\n");
@@ -73,7 +86,7 @@ public class GraphMLWriter implements TreeWriter {
 
 			}
 			else {
-				strBuf.append("\t <" + XML_EDGE + " id=\"branch" + edgeCount + "\" source=\"" + edge.source.id + "\" target=\"" + edge.target.id + "\"/>\n");
+				strBuf.append("\t <" + XML_EDGE + " id=\"branch" + edgeCount + "\" source=\"" + convertID(edge.source) + "\" target=\"" + convertID(edge.target) + "\"/>\n");
 			}
 			edgeCount++;
 		}

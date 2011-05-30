@@ -8,6 +8,7 @@ import fitnessProviders.FitnessProvider;
 
 import population.Population;
 import statistics.Collectible;
+import treesimj.TreesimJView;
 
 /**
  * A convenient base class for Demographic Models that contain only a single population, and therefore just specify 

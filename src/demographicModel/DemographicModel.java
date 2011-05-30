@@ -15,7 +15,7 @@ import xml.XMLParseable;
 public abstract class DemographicModel extends XMLParseable {
 
 	RandomEngine rng = null;
-	
+		
 	public DemographicModel(String blockName) {
 		super(blockName);
 	}

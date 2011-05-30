@@ -100,9 +100,10 @@ public class GraphDecomposer {
 				nodes.add(target);
 				
 				if (targetLocus.hasRecombination()) {
-					BranchBundle newBundle = getBranchNodePair(targetLocus, target, targetLocus.getBreakPointMin(), targetLocus.getBreakPointMax());
-					
 					Locus recombLocus = targetLocus.getRecombinationPartner();
+					BranchBundle newBundle = getBranchNodePair(recombLocus, target, targetLocus.getBreakPointMin(), targetLocus.getBreakPointMax());
+					
+
 					//Confusing bit here.. the recombLocus's breakpoints are exactly the same as the original locus's breakpoints, as they should be.
 					//But when we want to create two branches that attach to one node and go in different directions, the branch that goes to the recomb
 					//locus's parent but attaches to the original child locus must have its breakpoints 'switched'
@@ -116,11 +117,10 @@ public class GraphDecomposer {
 						newBPMin = 0;
 						newBPMax = recombLocus.getBreakPointMin();
 					}
-					BranchBundle recomBundle = getBranchNodePair(recombLocus, target, newBPMin, newBPMax);
+					BranchBundle recomBundle = getBranchNodePair(targetLocus, target, newBPMin, newBPMax);
 					
 					stack.push(newBundle);
 					stack.push(recomBundle);
-									
 				}
 				else {
 					//No recombination, only push a new branch if there's a coalescence here 

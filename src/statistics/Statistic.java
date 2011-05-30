@@ -46,6 +46,9 @@ public abstract class Statistic extends XMLParseable implements Serializable {
 	
 	protected NumberFormat formatter = new DecimalFormat("######0.0####");
 	
+
+	protected boolean collectData = true;
+	
 	//Recombination breaks some types of statistics, especially tree-shape stats. Stats that
 	//can operate correctly in the presence of recombination should set this to true. 
 	protected boolean canHandleRecombination = false;
@@ -67,6 +70,14 @@ public abstract class Statistic extends XMLParseable implements Serializable {
 	 */
 	public boolean requiresGenealogy() {
 		return false;
+	}
+	
+	/**
+	 * If false, no data will be collected even if .collectStatistic is called
+	 * @param collect
+	 */
+	public void setCollectData(boolean collect) {
+		this.collectData = collect;
 	}
 	
 	/**
@@ -232,7 +243,17 @@ public abstract class Statistic extends XMLParseable implements Serializable {
 	 * data in here
 	 * @param pop The current simulated population 
 	 */
-	public abstract void collect(Collectible pop);
+	protected abstract void collect(Collectible pop);
+	
+	/**
+	 * Collect data for this statistic. This will only do something if the collect field is true, which is settable
+	 * via a call to collectData(bool collectit)
+	 * @param pop
+	 */
+	public void collectStatistic(Collectible pop) {
+		if (collectData)
+			collect(pop);
+	}
 	
 	/**
 	 * A brief, user-readable description of the statistic

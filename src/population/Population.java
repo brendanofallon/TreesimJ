@@ -13,6 +13,7 @@ import siteModels.CodonUtils;
 import siteModels.CodonUtils.AminoAcid;
 import statistics.Collectible;
 import tree.DiscreteGenTree;
+import treesimj.TreesimJView;
 
 import cern.jet.random.Poisson;
 import cern.jet.random.Uniform;
@@ -60,11 +61,14 @@ public class Population implements Serializable, Collectible {
 	//root that unites the roots of all single populations. 
 	boolean autoShortenRoot = true;
 	
+	boolean storeAncestry;
+	
 	/**
 	 * Create a population but do not initialize it (that is, do not create the individuals yet)
 	 * @param rnger
 	 */
 	public Population() {
+		this.storeAncestry = TreesimJView.storeAncestry;
 		preservedIndividuals = new ArrayList<Locus>();
 		myPopNumber = getTotalPopCount();
 		totalPopCount++;
@@ -78,6 +82,7 @@ public class Population implements Serializable, Collectible {
 	 */
 	public Population(RandomEngine rnger, int size, boolean preserve, FitnessProvider type) {
 		this.preserve = preserve;
+		this.storeAncestry = TreesimJView.storeAncestry;
 		uniGenerator = new Uniform(rng);
 		poissonGenerator = new Poisson(1.0, rng); //The mean gets set later
 		preservedIndividuals = new ArrayList<Locus>();
@@ -511,6 +516,9 @@ public class Population implements Serializable, Collectible {
 	 * @return The root of the newly created genealogy
 	 */
 	private DiscreteGenTree getSampleTree(ArrayList<Locus> sample) {
+		if (! storeAncestry)
+			return null;
+		
 		ArrayList<Locus> actualKids = findPopulationIndsForSample(sample);
 		
 		ArrayList<Locus> sampleKids = new ArrayList<Locus>();
@@ -618,7 +626,7 @@ public class Population implements Serializable, Collectible {
 		//Locating the MRCA of everyone is slow, so we don't want to do it too often. But doing
 		//it very infrequently really increases the memory requirements, so there's a bit of a tradeoff
 		//Right now we just do it every 20 generations and hope thats ok
-		if (currentGen % 100 ==0) {
+		if (storeAncestry && currentGen % 100 ==0) {
 			root = findFC(pop);
 			root.setParent(null);
 		}
@@ -681,14 +689,25 @@ public class Population implements Serializable, Collectible {
 		int newlyPreserved = 0;
 		
 		//Old locus removal scheme here...
-		for(Locus ind : pop) {
-			if (ind.isPreserve()) {
-				preservedIndividuals.add(ind);
-				newlyPreserved++;
+		if (storeAncestry) {
+			for(Locus ind : pop) {
+				if (ind.isPreserve()) {
+					preservedIndividuals.add(ind);
+					newlyPreserved++;
+				}
+				else {
+					if (ind.numOffspring()==0 && !ind.isPreserve())
+						releaseLocus(ind);
+				}
 			}
-			else {
-				if (ind.numOffspring()==0 && !ind.isPreserve())
-					releaseLocus(ind);
+		}
+		else {
+			for(Locus ind : pop) {
+				Locus parent = ind.getParent();
+				parent.getOffspring().clear();
+				parent.clearReferences();
+				parent.setFitnessProvider(null);
+				ind.setParent(null);
 			}
 		}
 		
@@ -697,9 +716,7 @@ public class Population implements Serializable, Collectible {
 //			System.out.println("Preserving " + newlyPreserved + " new individuals; total is now " + preservedIndividuals.size() );
 		
 		 pop = newPop;
-//		 
-//		 if (autoShortenRoot)
-//			 shortenRoot();
+
 		 
 		 if (calls % 1000 == 0) {
 			 for(Locus ind : pop) {

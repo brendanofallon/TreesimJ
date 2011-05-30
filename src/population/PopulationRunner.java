@@ -24,6 +24,7 @@ import statistics.dna.DNAStatistic;
 import statistics.treeShape.SerialPairwiseCTime;
 import treesimj.ProgressListener;
 import treesimj.TJRunTimeException;
+import treesimj.TreesimJView;
 import demographicModel.DemographicModel;
 import dnaModels.DNASequence;
 
@@ -45,6 +46,10 @@ public class PopulationRunner {
 	private ArrayList<ProgressListener> progListeners;	//A list of things to be notified of when the simulation is done running 
 	private int treeSampleSize = 25; //Number of tips to use in tree sampling
 	
+	//This gets set to true if the simulation has reached the final generation
+	private boolean completed = false;
+	
+	
 	//private int masterChangeOffset = 0;
 	//private int masterChangeFrequency = 500000; //Experimental : change the master sequence every so often
 	
@@ -53,6 +58,10 @@ public class PopulationRunner {
 		this.demoModel = demoModel;
 		outputHandler = output;
 		progListeners = new ArrayList<ProgressListener>();
+	}
+	
+	public boolean hasCompleted() {
+		return completed;
 	}
 	
 	/**
@@ -203,7 +212,7 @@ public class PopulationRunner {
 	public void run(int burninGens, int totalLength, int dataCollectionFreq, int dnaSampleFreq, boolean writeTreeLog) {
 		int t = 0;
 		int REPORT_INTERVAL = dataCollectionFreq;
-
+		completed = false;
 		List<Statistic> stats = outputHandler.getStatistics();
 		
 		running = true;
@@ -288,7 +297,7 @@ public class PopulationRunner {
 		
 		outputHandler.setStartTime(new Date());
 		for(Statistic stat : stats) {
-			stat.clear();
+			stat.setCollectData(false); //Don't collect data during burnin
 		}
 		outputHandler.writeHeaders();
 		
@@ -323,7 +332,7 @@ public class PopulationRunner {
 				//At burnin gens, we clear all stats so they won't appear in any summary
 				if (t==burninGens) {
 					for(Statistic stat : stats) {
-							stat.clear();
+						stat.setCollectData(true);
 					}
 				}
 				
@@ -337,7 +346,7 @@ public class PopulationRunner {
 				try {
 
 					if (treeStatSampler != null && t>=burninGens && treeStatSampler.getSampleFrequency()>0 && (t%treeStatSampler.getSampleFrequency()==0)) {
-						treeStatSampler.collect(demoModel.getCollectible());
+						treeStatSampler.collectStatistic(demoModel.getCollectible());
 					}
 
 				}
@@ -351,7 +360,7 @@ public class PopulationRunner {
 					if (treeDNASampler != null && t>=burninGens && treeDNASampler.getSampleFrequency()>0 && (t%treeDNASampler.getSampleFrequency()==0)) {
 						//System.out.println("TreeDNA sampler is collecting");
 						if (treeDNASampler instanceof SerialTreeSampler)
-							treeDNASampler.collect(demoModel.getCollectible());
+							treeDNASampler.collectStatistic(demoModel.getCollectible());
 						else
 							treeDNASampler.collectAndFire(demoModel.getCollectible());
 					}
@@ -364,7 +373,7 @@ public class PopulationRunner {
 				
 				
 				try {
-				if (treeLogSampler != null && t>=burninGens && treeLogSampler.getSampleFrequency()>0 && (t%treeLogSampler.getSampleFrequency()==0)) {
+				if (TreesimJView.storeAncestry && treeLogSampler != null && t>=burninGens && treeLogSampler.getSampleFrequency()>0 && (t%treeLogSampler.getSampleFrequency()==0)) {
 					treeLogSampler.collectAndFire(demoModel.getCollectible());
 				}
 				}
@@ -384,7 +393,7 @@ public class PopulationRunner {
 					if ((stat.useDefaultCollectionFrequency() && (t+COLLECT_OFFSET)%dataCollectionFreq==0) || (!stat.useDefaultCollectionFrequency() && t%stat.getSampleFrequency()==0)) {
 						if (t>=burninGens || (t<burninGens && stat.collectDuringBurnin())) {
 							try {
-								stat.collect(demoModel.getCollectible()); //Call collect for ALL statistics... (tree stats also need this)
+								stat.collectStatistic(demoModel.getCollectible()); //Call collect for ALL statistics... (tree stats also need this)
 
 								if (stat instanceof TreeStatistic) {
 									((TreeStatistic)stat).collect( treeStatSampler.getLastTree() );
@@ -414,6 +423,10 @@ public class PopulationRunner {
 				}
 
 			} //for t, the generations loop
+			
+			
+			completed = true; //Reached end of loop, no exceptions, so we've completed
+			
 		}
 		catch (InterruptedException iex) {
 			//Nothing to do here, most likely the run was canceled by the user
