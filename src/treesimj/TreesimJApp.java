@@ -11,10 +11,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 /**
- * The main class of the application, containing the entry point ( the main method ). This class may not exist much longer since
- * it requires the confusing-and-not-really-used JSR 296 (org.jdesktop ..) application model. May be simpler to just nix this
- * whole thing and do it from scratch. We don't really use any of its features, and instead just get stymied when we can't do
- * what we want to. 
+ * 
  */
 public class TreesimJApp {
 

@@ -9,8 +9,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.jdesktop.swingworker.SwingWorker;
-
+import javax.swing.SwingWorker;
 
 import siteModels.CodonFitnesses;
 import siteModels.SiteFitnesses;
