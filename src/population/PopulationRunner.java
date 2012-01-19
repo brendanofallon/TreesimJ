@@ -217,10 +217,10 @@ public class PopulationRunner {
 		
 		running = true;
 		
-		int COLLECT_OFFSET = 0;
+		final int COLLECT_OFFSET = 0;
 		int lastProgressVal = 0;
 		
-		boolean useSerialSampler = false;	//Whether or not to use the experimental serial tree sampling scheme
+		final boolean useSerialSampler = false;	//Whether or not to use the experimental serial tree sampling scheme
 		
 		TreeSampler treeStatSampler = null; //The sampler that collects trees for statistics use
 		TreeSampler treeDNASampler = null; //The sampler that collects trees for fasta / tree file writing
@@ -371,11 +371,11 @@ public class PopulationRunner {
 					throw rtex;
 				}
 				
-				
+
 				try {
-				if (TreesimJView.storeAncestry && treeLogSampler != null && t>=burninGens && treeLogSampler.getSampleFrequency()>0 && (t%treeLogSampler.getSampleFrequency()==0)) {
-					treeLogSampler.collectAndFire(demoModel.getCollectible());
-				}
+					if (TreesimJView.storeAncestry && treeLogSampler != null && t>=burninGens && treeLogSampler.getSampleFrequency()>0 && (t%treeLogSampler.getSampleFrequency()==0)) {
+						treeLogSampler.collectAndFire(demoModel.getCollectible());
+					}
 				}
 				catch (Exception ex) {
 					TJRunTimeException rtex = new TJRunTimeException(treeLogSampler, ex); 

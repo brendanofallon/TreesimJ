@@ -87,7 +87,7 @@ public class TreesimJView extends JFrame implements DoneListener, ProgressListen
 	//Where we store the settings from the last run
 	private static final String settingsFromLastRun = ".tj_lastrunsettings.xml";
 	
-	public static final boolean storeAncestry = false;
+	public static final boolean storeAncestry = true;
 	
 	//Used to keep track of which "repeat" of the same simulation settings we're on
 	private int totalRepeatNumber = 1;

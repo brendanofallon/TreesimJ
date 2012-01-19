@@ -11,12 +11,8 @@ import java.io.IOException;
 import java.util.Properties;
 
 /**
-<<<<<<< HEAD
- * 
-=======
  * The main class of the application, containing the entry point ( the main method ). 
  * what we want to. 
->>>>>>> 4290488e73147b30c2f8abe58a680ab1396f87ac
  */
 public class TreesimJApp {
 

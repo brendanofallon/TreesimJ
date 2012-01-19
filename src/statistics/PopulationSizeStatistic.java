@@ -13,10 +13,15 @@ public class PopulationSizeStatistic extends Statistic {
 	public PopulationSizeStatistic() {
 		formatter = new DecimalFormat("######00");
 		canHandleRecombination = true;
+		super.setCollectData(true);
 	}
 	
 	public void collect(Collectible pop) {
 		values.add((double)pop.size());
+	}
+	
+	public boolean collectDuringBurnin() {
+		return true;
 	}
 
 
